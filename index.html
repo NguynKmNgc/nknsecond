@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a3d8f">
+<title>File Explorer - Windows 10</title>
+<style>
+    /* =========================================================
+       RESET & BIẾN CHUNG
+       ========================================================= */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        font-family: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system,
+                     "Helvetica Neue", Roboto, Arial, sans-serif;
+        font-size: 13px;
+        color: #1b1b1b;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+            radial-gradient(ellipse 70% 55% at 28% 38%, rgba(120, 200, 255, 0.42), transparent 65%),
+            radial-gradient(ellipse 60% 50% at 72% 68%, rgba(0, 110, 220, 0.55), transparent 65%),
+            radial-gradient(ellipse 80% 70% at 50% 50%, rgba(0, 60, 140, 0.35), transparent 70%),
+            linear-gradient(135deg, #001129 0%, #00306b 45%, #001a3d 100%);
+    }
+
+    /* =========================================================
+       CỬA SỔ WINDOWS
+       ========================================================= */
+    .window {
+        width: 100%;
+        height: 100%;
+        max-width: 1440px;
+        max-height: 920px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        animation: windowIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes windowIn {
+        from { opacity: 0; transform: scale(0.97) translateY(14px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @media (min-width: 900px) {
+        body { padding: 22px; }
+        .window { border-radius: 9px; }
+    }
+
+    /* =========================================================
+       THANH TIÊU ĐỀ
+       ========================================================= */
+    .titlebar {
+        height: 32px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border-bottom: 1px solid #ececec;
+        padding-left: 12px;
+        user-select: none;
+    }
+
+    .titlebar-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .titlebar-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+
+    .titlebar-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .window-title {
+        font-size: 12px;
+        color: #333333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .titlebar-controls {
+        display: flex;
+        height: 100%;
+        flex-shrink: 0;
+    }
+
+    .tb-btn {
+        width: 46px;
+        height: 100%;
+        border: none;
+        background: transparent;
+        color: #444444;
+        font-size: 11px;
+        font-family: "Segoe UI Symbol", "Segoe UI", sans-serif;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .tb-btn:hover {
+        background: #e9e9e9;
+    }
+
+    .tb-btn.close:hover {
+        background: #e81123;
+        color: #ffffff;
+    }
+
+    /* =========================================================
+       DẢI TAB LỆNH
+       ========================================================= */
+    .tabrow {
+        height: 30px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        background: #f5f6f7;
+        padding: 0 6px;
+        border-bottom: 1px solid #e6e6e6;
+        overflow-x: auto;
+        scrollbar-width: none;
+        user-select: none;
+    }
+
+    .tabrow::-webkit-scrollbar { display: none; }
+
+    .ribbon-tab {
+        padding: 5px 14px 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #333333;
+        background: transparent;
+        border: none;
+        border-radius: 4px 4px 0 0;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s ease;
+    }
+
+    .ribbon-tab:hover {
+        background: #e7e9eb;
+    }
+
+    .ribbon-tab.active {
+        background: #ffffff;
+        color: #0078d7;
+        font-weight: 600;
+        box-shadow: 0 -1px 0 #e6e6e6, -1px 0 0 #e6e6e6, 1px 0 0 #e6e6e6;
+    }
+
+    /* =========================================================
+       THANH LỆNH (RIBBON RÚT GỌN)
+       ========================================================= */
+    .commandbar {
+        height: 42px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 0 8px;
+        background: #f5f6f7;
+        border-bottom: 1px solid #e0e0e0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        user-select: none;
+    }
+
+    .commandbar::-webkit-scrollbar { display: none; }
+
+    .cmd-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        color: #2b2b2b;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .cmd-btn:hover {
+        background: #e5f3ff;
+        border-color: #b8ddf7;
+    }
+
+    .cmd-btn:active {
+        background: #cce8ff;
+    }
+
+    .cmd-icon {
+        font-size: 14px;
+        line-height: 1;
+    }
+
+    .cmd-sep {
+        width: 1px;
+        height: 22px;
+        background: #dcdcdc;
+        margin: 0 5px;
+        flex-shrink: 0;
+    }
+
+    /* =========================================================
+       THANH ĐIỀU HƯỚNG
+       ========================================================= */
+    .navbar {
+        height: 40px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 8px;
+        background: #ffffff;
+        border-bottom: 1px solid #e6e6e6;
+    }
+
+    .nav-btn {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        color: #444444;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+        background: #e5f3ff;
+        border-color: #c2e0f7;
+    }
+
+    .nav-btn:disabled {
+        color: #c0c0c0;
+        cursor: default;
+    }
+
+    .menu-toggle {
+        display: none;
+    }
+
+    /* Thanh địa chỉ */
+    .addressbar {
+        flex: 1;
+        min-width: 0;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        padding: 0 6px;
+        background: #ffffff;
+        border: 1px solid #d6d6d6;
+        border-radius: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .addressbar::-webkit-scrollbar { display: none; }
+
+    .addressbar:focus-within {
+        border-color: #0078d7;
+        box-shadow: 0 0 0 1px #0078d7 inset;
+    }
+
+    .crumb {
+        padding: 3px 7px;
+        font-size: 12px;
+        font-family: inherit;
+        color: #1b1b1b;
+        background: transparent;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background 0.15s ease;
+    }
+
+    .crumb:hover {
+        background: #e5f3ff;
+    }
+
+    .crumb.active {
+        font-weight: 600;
+        color: #0078d7;
+    }
+
+    .crumb-sep {
+        font-size: 11px;
+        color: #9a9a9a;
+        flex-shrink: 0;
+        padding: 0 1px;
+        user-select: none;
+    }
+
+    /* Ô tìm kiếm */
+    .searchbox {
+        position: relative;
+        width: 190px;
+        flex-shrink: 0;
+    }
+
+    .searchbox input {
+        width: 100%;
+        height: 30px;
+        padding: 0 30px 0 10px;
+        font-size: 12px;
+        font-family: inherit;
+        color: #1b1b1b;
+        background: #ffffff;
+        border: 1px solid #d6d6d6;
+        border-radius: 4px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .searchbox input::placeholder {
+        color: #9a9a9a;
+    }
+
+    .searchbox input:focus {
+        border-color: #0078d7;
+        box-shadow: 0 0 0 1px #0078d7 inset;
+    }
+
+    .searchbox .search-icon {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: #8a8a8a;
+        pointer-events: none;
+    }
+
+    /* =========================================================
+       THÂN CỬA SỔ
+       ========================================================= */
+    .body {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        position: relative;
+        background: #ffffff;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+        width: 224px;
+        flex-shrink: 0;
+        background: #f5f6f7;
+        border-right: 1px solid #e6e6e6;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 6px 0 14px;
+        scrollbar-width: thin;
+        scrollbar-color: #c8c8c8 transparent;
+        user-select: none;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 8px; }
+    .sidebar::-webkit-scrollbar-thumb {
+        background: #c8c8c8;
+        border-radius: 8px;
+        border: 2px solid #f5f6f7;
+    }
+
+    .side-title {
+        padding: 8px 14px 5px;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #6b6b6b;
+        letter-spacing: 0.2px;
+    }
+
+    .side-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        color: #2b2b2b;
+        border-radius: 4px;
+        margin: 0 6px 1px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: background 0.15s ease;
+    }
+
+    .side-item:hover {
+        background: #e5f3ff;
+    }
+
+    .side-item.active {
+        background: #cce8ff;
+        font-weight: 600;
+    }
+
+    .side-item-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+
+    .side-item-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .side-item-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .side-divider {
+        height: 1px;
+        background: #e2e2e2;
+        margin: 7px 14px;
+    }
+
+    /* ---------- Vùng nội dung ---------- */
+    .content {
+        flex: 1;
+        min-width: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #ffffff;
+        scrollbar-width: thin;
+        scrollbar-color: #c8c8c8 transparent;
+        position: relative;
+    }
+
+    .content::-webkit-scrollbar { width: 10px; }
+    .content::-webkit-scrollbar-thumb {
+        background: #c8c8c8;
+        border-radius: 10px;
+        border: 3px solid #ffffff;
+    }
+    .content::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* ---------- Chế độ xem TILES ---------- */
+    .view-tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+        gap: 2px;
+        padding: 12px;
+        animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .item {
+        position: relative;
+        cursor: default;
+        user-select: none;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 6px 8px;
+        min-height: 106px;
+        text-align: center;
+    }
+
+    .tile:hover {
+        background: #e5f3ff;
+        border-color: #c2e0f7;
+    }
+
+    .tile.selected {
+        background: #cce8ff;
+        border-color: #99d1ff;
+    }
+
+    .tile.selected:hover {
+        background: #b8dfff;
+    }
+
+    .tile-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .tile-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.13));
+    }
+
+    .tile-name {
+        font-size: 12px;
+        line-height: 1.35;
+        color: #1b1b1b;
+        word-break: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        max-width: 100%;
+        pointer-events: none;
+    }
+
+    /* Ô đĩa có thanh dung lượng */
+    .drive-tile {
+        min-height: 138px;
+    }
+
+    .drive-meter {
+        width: 88%;
+        height: 11px;
+        margin-top: 8px;
+        background: #e6e6e6;
+        border: 1px solid #cfcfcf;
+        border-radius: 3px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .drive-meter-fill {
+        height: 100%;
+        background: linear-gradient(180deg, #4aa8f0, #0078d7);
+        border-radius: 2px;
+        transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .drive-meter.warning .drive-meter-fill {
+        background: linear-gradient(180deg, #ffc44d, #f0a000);
+    }
+
+    .drive-meter.critical .drive-meter-fill {
+        background: linear-gradient(180deg, #ff6b6b, #d9342b);
+    }
+
+    .drive-info {
+        margin-top: 5px;
+        font-size: 10.5px;
+        color: #5c5c5c;
+        line-height: 1.3;
+        pointer-events: none;
+    }
+
+    /* ---------- Chế độ xem DETAILS ---------- */
+    .view-details {
+        padding: 4px 0 20px;
+        animation: fadeIn 0.25s ease;
+    }
+
+    .details-row {
+        display: flex;
+        align-items: center;
+        height: 27px;
+        padding: 0 12px;
+        font-size: 12.5px;
+        color: #1b1b1b;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        cursor: default;
+        user-select: none;
+        transition: background 0.1s ease;
+    }
+
+    .details-row:hover {
+        background: #e5f3ff;
+        border-color: #c2e0f7;
+    }
+
+    .details-row.selected {
+        background: #cce8ff;
+        border-color: #99d1ff;
+    }
+
+    .details-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        height: 26px;
+        background: #ffffff;
+        border-bottom: 1px solid #e6e6e6;
+        border-radius: 0;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #5c5c5c;
+        cursor: default;
+    }
+
+    .details-header:hover {
+        background: #ffffff;
+        border-color: transparent;
+        border-bottom-color: #e6e6e6;
+    }
+
+    .col-name {
+        flex: 1 1 46%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-right: 10px;
+    }
+
+    .col-date {
+        flex: 0 0 20%;
+        min-width: 0;
+        padding-right: 10px;
+        color: #5c5c5c;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .col-type {
+        flex: 0 0 20%;
+        min-width: 0;
+        padding-right: 10px;
+        color: #5c5c5c;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .col-size {
+        flex: 0 0 14%;
+        min-width: 0;
+        text-align: right;
+        color: #5c5c5c;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .row-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .row-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .row-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ---------- Thư mục trống ---------- */
+    .empty-folder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-height: 260px;
+        gap: 12px;
+        color: #8a8a8a;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .empty-folder-icon {
+        width: 72px;
+        height: 72px;
+        opacity: 0.4;
+    }
+
+    .empty-folder-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .empty-folder p {
+        font-size: 13px;
+    }
+
+    /* =========================================================
+       THANH TRẠNG THÁI
+       ========================================================= */
+    .statusbar {
+        height: 26px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        background: #f5f6f7;
+        border-top: 1px solid #e6e6e6;
+        font-size: 11.5px;
+        color: #5c5c5c;
+        user-select: none;
+    }
+
+    .status-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .status-right {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+    }
+
+    .view-btn {
+        width: 26px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #5c5c5c;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .view-btn:hover {
+        background: #e5f3ff;
+    }
+
+    .view-btn.active {
+        background: #cce8ff;
+        border-color: #99d1ff;
+        color: #0078d7;
+    }
+
+    /* =========================================================
+       TOAST
+       ========================================================= */
+    .toast-container {
+        position: fixed;
+        bottom: 26px;
+        right: 26px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+        pointer-events: none;
+        max-width: calc(100% - 40px);
+    }
+
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1b1b1b;
+        background: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-left: 4px solid #0078d7;
+        border-radius: 6px;
+        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
+        opacity: 0;
+        transform: translateX(30px) scale(0.96);
+        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+
+    .toast.warn {
+        border-left-color: #f0a000;
+    }
+
+    .toast-icon {
+        font-size: 16px;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    /* =========================================================
+       LỚP PHỦ SIDEBAR TRÊN MOBILE
+       ========================================================= */
+    .sidebar-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 40;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 820px) {
+        .menu-toggle {
+            display: flex;
+        }
+
+        .sidebar {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 6px 0 24px rgba(0, 0, 0, 0.18);
+            width: 250px;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .searchbox {
+            width: 132px;
+        }
+
+        .view-tiles {
+            grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+            padding: 8px;
+        }
+
+        .tile-icon {
+            width: 42px;
+            height: 42px;
+        }
+
+        .col-date,
+        .col-type {
+            display: none;
+        }
+
+        .col-name {
+            flex: 1 1 70%;
+        }
+
+        .col-size {
+            flex: 0 0 28%;
+        }
+    }
+
+    @media (max-width: 560px) {
+        .tabrow {
+            display: none;
+        }
+
+        .commandbar {
+            height: 38px;
+            padding: 0 5px;
+        }
+
+        .cmd-btn {
+            padding: 6px 8px;
+            font-size: 11.5px;
+        }
+
+        .cmd-text {
+            display: none;
+        }
+
+        .cmd-icon {
+            font-size: 15px;
+        }
+
+        .navbar {
+            height: 38px;
+            gap: 2px;
+            padding: 0 5px;
+        }
+
+        .searchbox {
+            width: 40px;
+        }
+
+        .searchbox input {
+            padding: 0 8px 0 8px;
+            font-size: 0;
+        }
+
+        .searchbox input::placeholder {
+            font-size: 12px;
+            color: transparent;
+        }
+
+        .searchbox .search-icon {
+            right: 50%;
+            transform: translate(50%, -50%);
+        }
+
+        .searchbox.expanded {
+            position: absolute;
+            left: 5px;
+            right: 5px;
+            width: auto;
+            z-index: 60;
+        }
+
+        .searchbox.expanded input {
+            font-size: 12px;
+            padding: 0 30px 0 10px;
+        }
+
+        .searchbox.expanded input::placeholder {
+            color: #9a9a9a;
+        }
+
+        .searchbox.expanded .search-icon {
+            right: 8px;
+            transform: translateY(-50%);
+        }
+
+        .view-tiles {
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+            gap: 1px;
+            padding: 6px;
+        }
+
+        .tile {
+            min-height: 96px;
+            padding: 8px 4px 6px;
+        }
+
+        .tile-icon {
+            width: 38px;
+            height: 38px;
+            margin-bottom: 5px;
+        }
+
+        .tile-name {
+            font-size: 11px;
+        }
+
+        .drive-tile {
+            min-height: 126px;
+        }
+
+        .drive-meter {
+            height: 9px;
+        }
+
+        .drive-info {
+            font-size: 9.5px;
+        }
+
+        .toast-container {
+            right: 12px;
+            left: 12px;
+            bottom: 12px;
+            max-width: none;
+        }
+
+        .toast {
+            font-size: 12.5px;
+            padding: 11px 14px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="window">
+
+    <!-- ===================== THANH TIÊU ĐỀ ===================== -->
+    <div class="titlebar">
+        <div class="titlebar-left">
+            <div class="titlebar-icon" id="titlebarIcon"></div>
+            <span class="window-title" id="windowTitle">This PC</span>
+        </div>
+        <div class="titlebar-controls">
+            <button type="button" class="tb-btn" id="btnMinimize" title="Thu nhỏ">&#9472;</button>
+            <button type="button" class="tb-btn" id="btnMaximize" title="Phóng to">&#9633;</button>
+            <button type="button" class="tb-btn close" id="btnClose" title="Đóng">&#10005;</button>
+        </div>
+    </div>
+
+    <!-- ===================== DẢI TAB ===================== -->
+    <div class="tabrow">
+        <button type="button" class="ribbon-tab" data-tab="File">File</button>
+        <button type="button" class="ribbon-tab active" data-tab="Home">Home</button>
+        <button type="button" class="ribbon-tab" data-tab="Share">Share</button>
+        <button type="button" class="ribbon-tab" data-tab="View">View</button>
+    </div>
+
+    <!-- ===================== THANH LỆNH ===================== -->
+    <div class="commandbar">
+        <button type="button" class="cmd-btn" data-cmd="newfolder">
+            <span class="cmd-icon">&#128193;</span><span class="cmd-text">New folder</span>
+        </button>
+        <div class="cmd-sep"></div>
+        <button type="button" class="cmd-btn" data-cmd="cut">
+            <span class="cmd-icon">&#9986;</span><span class="cmd-text">Cut</span>
+        </button>
+        <button type="button" class="cmd-btn" data-cmd="copy">
+            <span class="cmd-icon">&#128203;</span><span class="cmd-text">Copy</span>
+        </button>
+        <button type="button" class="cmd-btn" data-cmd="paste">
+            <span class="cmd-icon">&#128196;</span><span class="cmd-text">Paste</span>
+        </button>
+        <div class="cmd-sep"></div>
+        <button type="button" class="cmd-btn" data-cmd="rename">
+            <span class="cmd-icon">&#9998;</span><span class="cmd-text">Rename</span>
+        </button>
+        <button type="button" class="cmd-btn" data-cmd="delete">
+            <span class="cmd-icon">&#128465;</span><span class="cmd-text">Delete</span>
+        </button>
+        <div class="cmd-sep"></div>
+        <button type="button" class="cmd-btn" data-cmd="sort">
+            <span class="cmd-icon">&#8645;</span><span class="cmd-text">Sort</span>
+        </button>
+        <button type="button" class="cmd-btn" data-cmd="view">
+            <span class="cmd-icon">&#9638;</span><span class="cmd-text">View</span>
+        </button>
+    </div>
+
+    <!-- ===================== THANH ĐIỀU HƯỚNG ===================== -->
+    <div class="navbar">
+        <button type="button" class="nav-btn menu-toggle" id="btnMenu" title="Menu">&#9776;</button>
+        <button type="button" class="nav-btn" id="btnBack" title="Quay lại">&#8592;</button>
+        <button type="button" class="nav-btn" id="btnForward" title="Tiến tới">&#8594;</button>
+        <button type="button" class="nav-btn" id="btnUp" title="Lên trên">&#8593;</button>
+        <div class="addressbar" id="addressBar"></div>
+        <div class="searchbox" id="searchBox">
+            <input type="text" id="searchInput" placeholder="Search" autocomplete="off" spellcheck="false">
+            <span class="search-icon">&#128269;</span>
+        </div>
+    </div>
+
+    <!-- ===================== THÂN ===================== -->
+    <div class="body">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="content" id="content"></main>
+    </div>
+
+    <!-- ===================== THANH TRẠNG THÁI ===================== -->
+    <div class="statusbar">
+        <div class="status-left">
+            <span id="statusItems">0 items</span>
+        </div>
+        <div class="status-right">
+            <button type="button" class="view-btn active" id="btnTilesView" title="Large icons">&#9638;</button>
+            <button type="button" class="view-btn" id="btnDetailsView" title="Details">&#9776;</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== KHU VỰC TOAST ===================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* =========================================================
+   PHẦN 1: TIỆN ÍCH CHUNG
+   ========================================================= */
+
+// Số nguyên ngẫu nhiên trong khoảng [min, max]
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Chọn ngẫu nhiên một phần tử trong mảng
+function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Thêm số 0 ở đầu cho đủ 2 chữ số
+function pad2(n) {
+    return String(n).padStart(2, "0");
+}
+
+// Sinh ngày sửa đổi ngẫu nhiên trong vòng 400 ngày qua
+function randomModified() {
+    const now = Date.now();
+    const past = now - 400 * 24 * 60 * 60 * 1000;
+    const t = past + Math.random() * (now - past);
+    const d = new Date(t);
+    return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear() +
+           " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+
+// Định dạng kích thước (đầu vào là KB)
+function formatSize(kb) {
+    if (kb === undefined || kb === null || isNaN(kb)) return "";
+    if (kb <= 0) return "0 KB";
+    if (kb < 1024) return Math.round(kb) + " KB";
+
+    const mb = kb / 1024;
+    if (mb < 1024) {
+        const val = (mb < 10) ? mb.toFixed(1) : Math.round(mb);
+        return String(val).replace(".", ",") + " MB";
+    }
+
+    const gb = mb / 1024;
+    const rounded = Math.round(gb * 100) / 100;
+    const text = Number.isInteger(rounded)
+        ? String(rounded)
+        : rounded.toFixed(2).replace(".", ",");
+    return text + " GB";
+}
+
+// Chống lỗi XSS khi chèn chuỗi vào HTML
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+        if (c === "&") return "&amp;";
+        if (c === "<") return "&lt;";
+        if (c === ">") return "&gt;";
+        if (c === '"') return "&quot;";
+        return "&#39;";
+    });
+}
+
+
+/* =========================================================
+   PHẦN 2: BỘ ICON SVG
+   ========================================================= */
+
+const SVG_FOLDER =
+    '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M5 10h13.5l3.5 5H43a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V13a3 3 0 0 1 3-3z" fill="#E8A33D"/>' +
+        '<path d="M5 17h38a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V20a3 3 0 0 1 3-3z" fill="#FFC94B"/>' +
+    '</svg>';
+
+const SVG_THISPC =
+    '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="4" y="8" width="40" height="27" rx="2.5" fill="#E8EEF5" stroke="#A8B4C0" stroke-width="1.6"/>' +
+        '<rect x="7.5" y="11.5" width="33" height="20" rx="1.5" fill="#4A90D9"/>' +
+        '<path d="M7.5 11.5h33v9h-33z" fill="#5DA0E8" opacity="0.55"/>' +
+        '<rect x="19" y="35" width="10" height="5" fill="#B8C2CC"/>' +
+        '<rect x="12" y="40" width="24" height="3" rx="1.5" fill="#98A4B0"/>' +
+    '</svg>';
+
+const SVG_DRIVE =
+    '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="5" y="13" width="38" height="24" rx="3.5" fill="#DFE4E9" stroke="#B6BDC4" stroke-width="1.2"/>' +
+        '<path d="M6.5 20.5h35" stroke="#C1C9D1" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<circle cx="36.5" cy="29" r="2.2" fill="#8A939B"/>' +
+        '<rect x="12" y="27" width="9" height="4.5" rx="1.5" fill="#C1C9D1"/>' +
+    '</svg>';
+
+const SVG_EMPTY_FOLDER =
+    '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M5 10h13.5l3.5 5H43a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V13a3 3 0 0 1 3-3z" fill="#C9CDD2"/>' +
+        '<path d="M5 17h38a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V20a3 3 0 0 1 3-3z" fill="#E2E5E9"/>' +
+    '</svg>';
+
+// Sinh icon tệp dạng tài liệu với màu tương ứng
+function fileSVG(color) {
+    return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M10 4h19l10 10v30a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" ' +
+              'fill="#FFFFFF" stroke="#CCD2D8" stroke-width="1.6" stroke-linejoin="round"/>' +
+        '<path d="M29 4l10 10H30a1 1 0 0 1-1-1V4z" fill="' + color + '"/>' +
+        '<rect x="14" y="25" width="20" height="3.4" rx="1.7" fill="' + color + '"/>' +
+        '<rect x="14" y="32" width="13" height="3.4" rx="1.7" fill="#C9D0D6"/>' +
+    '</svg>';
+}
+
+
+/* =========================================================
+   PHẦN 3: ĐỊNH NGHĨA CÁC LOẠI TỆP
+   ========================================================= */
+
+const KINDS = {
+    txt: {
+        exts: ["txt"],
+        sizes: [1, 240],
+        label: "Text Document",
+        color: "#607D8B",
+        names: ["Ghi chú", "Danh sách", "Ghi chú họp", "Todo", "Yêu cầu",
+                "Hướng dẫn", "Câu hỏi", "Nhật ký", "Mật khẩu", "Liên hệ"]
+    },
+    doc: {
+        exts: ["docx", "doc"],
+        sizes: [80, 6000],
+        label: "Microsoft Word Document",
+        color: "#2B579A",
+        names: ["Báo cáo", "Hợp đồng", "Kế hoạch", "Tài liệu", "Đề cương",
+                "Biên bản", "Thuyết minh", "Sơ yếu lý lịch", "Đơn từ", "Luận văn",
+                "Công văn", "Tờ trình"]
+    },
+    sheet: {
+        exts: ["xlsx", "xls"],
+        sizes: [40, 3200],
+        label: "Microsoft Excel Worksheet",
+        color: "#217346",
+        names: ["Bảng điểm", "Hóa đơn", "Ngân sách", "Danh sách", "Thống kê",
+                "Doanh thu", "Chi phí", "Kho hàng", "Chấm công", "Lương"]
+    },
+    slide: {
+        exts: ["pptx", "ppt"],
+        sizes: [500, 22000],
+        label: "Microsoft PowerPoint Presentation",
+        color: "#D24726",
+        names: ["Bài giảng", "Thuyết trình", "Báo cáo", "Đào tạo",
+                "Kế hoạch", "Giới thiệu", "Tổng kết"]
+    },
+    pdf: {
+        exts: ["pdf"],
+        sizes: [120, 18000],
+        label: "PDF Document",
+        color: "#E5252A",
+        names: ["Hợp đồng", "Tài liệu", "Sách", "Báo cáo", "Hướng dẫn",
+                "Chứng chỉ", "Hóa đơn", "Giáo trình", "Tiêu chuẩn"]
+    },
+    img: {
+        exts: ["jpg", "png", "gif", "bmp"],
+        sizes: [120, 8500],
+        label: "Image file",
+        color: "#7E57C2",
+        names: ["Ảnh", "Hình nền", "Screenshot", "Bìa", "Poster", "Logo",
+                "Banner", "Chân dung", "Phong cảnh", "Kỷ niệm", "Thiết kế"]
+    },
+    audio: {
+        exts: ["mp3", "wav", "flac"],
+        sizes: [2200, 13000],
+        label: "Audio file",
+        color: "#FF7043",
+        names: ["Bài hát", "Nhạc nền", "Podcast", "Ghi âm", "Nhạc chuông",
+                "Beat", "Remix", "Live"]
+    },
+    video: {
+        exts: ["mp4", "mkv", "avi"],
+        sizes: [45000, 2400000],
+        label: "Video file",
+        color: "#E91E63",
+        names: ["Video", "Clip", "Phim ngắn", "Tutorial", "Kỷ niệm",
+                "Buổi họp", "Phóng sự", "Vlog"]
+    },
+    zip: {
+        exts: ["zip", "rar", "7z"],
+        sizes: [900, 620000],
+        label: "Compressed (zipped) Folder",
+        color: "#FFB300",
+        names: ["Backup", "Dữ liệu", "Nén", "Lưu trữ", "Archive", "Source"]
+    },
+    exe: {
+        exts: ["exe", "msi"],
+        sizes: [1200, 380000],
+        label: "Application",
+        color: "#546E7A",
+        names: ["Setup", "Installer", "Update", "Driver", "Tool",
+                "Runtime", "Client", "Launcher"]
+    },
+    dll: {
+        exts: ["dll"],
+        sizes: [80, 14000],
+        label: "Application extension",
+        color: "#78909C",
+        names: ["msvcp140", "vcruntime140", "libcef", "sqlite3", "core",
+                "engine", "plugin", "helper", "render", "network",
+                "graphics", "audio"]
+    },
+    sys: {
+        exts: ["sys"],
+        sizes: [800, 3000000],
+        label: "System file",
+        color: "#455A64",
+        names: ["hiberfil", "pagefile", "swapfile", "ntfs", "volsnap"]
+    },
+    log: {
+        exts: ["log", "ini", "cfg"],
+        sizes: [1, 800],
+        label: "Log file",
+        color: "#8D6E63",
+        names: ["install", "debug", "error", "config", "settings", "trace"]
+    }
+};
+
+const SUFFIXES = [
+    "", "", "", " 2023", " 2024", " 2025", " (1)", " (2)", " (3)",
+    " final", " v2", " v3", " mới", "_01", "_02", "_backup"
+];
+
+
+/* =========================================================
+   PHẦN 4: SINH TỆP & THƯ MỤC
+   ========================================================= */
+
+let fileIdCounter = 1;
+
+function makeFile(kind) {
+    const k = KINDS[kind];
+    const ext = pick(k.exts);
+    const base = pick(k.names);
+    const suffix = pick(SUFFIXES);
+    const size = randInt(k.sizes[0], k.sizes[1]);
+
+    return {
+        id: fileIdCounter++,
+        name: base + suffix + "." + ext,
+        type: "file",
+        kind: kind,
+        ext: ext,
+        size: size,
+        modified: randomModified()
+    };
+}
+
+function makeFolder(name, children) {
+    return {
+        id: fileIdCounter++,
+        name: name,
+        type: "folder",
+        children: children || [],
+        modified: randomModified()
+    };
+}
+
+function makeDrive(name, letter, capacityGB, usedGB, children) {
+    const GB = 1024 * 1024; // số KB trong 1 GB
+    return {
+        id: fileIdCounter++,
+        name: name,
+        type: "drive",
+        letter: letter,
+        capacity: capacityGB * GB,
+        used: usedGB * GB,
+        children: children || [],
+        modified: randomModified()
+    };
+}
+
+function manyFiles(kinds, count) {
+    const out = [];
+    for (let i = 0; i < count; i++) {
+        out.push(makeFile(pick(kinds)));
+    }
+    return out;
+}
+
+function manyFolders(prefix, count, kinds, filesPerFolder) {
+    const out = [];
+    for (let i = 1; i <= count; i++) {
+        out.push(makeFolder(prefix + " " + i, manyFiles(kinds, randInt(2, filesPerFolder))));
+    }
+    return out;
+}
+
+
+/* =========================================================
+   PHẦN 5: CÂY HỆ THỐNG TỆP
+   ========================================================= */
+
+const FS = {
+    id: 0,
+    name: "This PC",
+    type: "root",
+    children: [
+
+        /* ---------- DESKTOP ---------- */
+        makeFolder("Desktop", [
+            makeFile("txt"),
+            makeFile("img"),
+            makeFile("doc"),
+            makeFile("exe"),
+            makeFolder("Shortcuts", [
+                makeFile("exe"),
+                makeFile("exe"),
+                makeFile("log")
+            ])
+        ]),
+
+        /* ---------- DOCUMENTS ---------- */
+        makeFolder("Documents", [
+            makeFolder("Công việc", manyFiles(["doc", "sheet", "pdf", "slide", "txt"], 11)),
+            makeFolder("Cá nhân", manyFiles(["doc", "img", "pdf", "txt"], 8)),
+            makeFolder("Học tập", manyFiles(["pdf", "doc", "slide", "txt"], 9)),
+            makeFolder("Hợp đồng", manyFiles(["pdf", "doc"], 6)),
+            makeFile("doc"),
+            makeFile("sheet"),
+            makeFile("pdf"),
+            makeFile("txt"),
+            makeFile("slide")
+        ]),
+
+        /* ---------- DOWNLOADS ---------- */
+        makeFolder("Downloads", [
+            makeFile("exe"),
+            makeFile("zip"),
+            makeFile("pdf"),
+            makeFile("img"),
+            makeFile("audio"),
+            makeFile("video"),
+            makeFile("doc"),
+            makeFile("sheet"),
+            makeFile("exe"),
+            makeFile("zip"),
+            makeFile("pdf"),
+            makeFile("img"),
+            makeFile("exe"),
+            makeFile("zip"),
+            makeFile("video"),
+            makeFile("doc"),
+            makeFile("img"),
+            makeFile("exe")
+        ]),
+
+        /* ---------- MUSIC ---------- */
+        makeFolder("Music", [
+            makeFolder("Nhạc Việt", manyFiles(["audio"], 12)),
+            makeFolder("Nhạc US-UK", manyFiles(["audio"], 10)),
+            makeFolder("Nhạc Hàn", manyFiles(["audio"], 7)),
+            makeFolder("Nhạc không lời", manyFiles(["audio"], 6)),
+            makeFile("audio"),
+            makeFile("audio"),
+            makeFile("audio"),
+            makeFile("img")
+        ]),
+
+        /* ---------- PICTURES ---------- */
+        makeFolder("Pictures", [
+            makeFolder("Camera Roll", manyFiles(["img"], 14)),
+            makeFolder("Screenshots", manyFiles(["img"], 11)),
+            makeFolder("Hình nền", manyFiles(["img"], 8)),
+            makeFolder("Thiết kế", manyFiles(["img"], 6)),
+            makeFolder("Logo", manyFiles(["img"], 5)),
+            makeFile("img"),
+            makeFile("img"),
+            makeFile("img"),
+            makeFile("img")
+        ]),
+
+        /* ---------- VIDEOS ---------- */
+        makeFolder("Videos", [
+            makeFolder("Captures", manyFiles(["video"], 6)),
+            makeFolder("Phim", manyFiles(["video"], 7)),
+            makeFolder("Clip ngắn", manyFiles(["video"], 5)),
+            makeFile("video"),
+            makeFile("video"),
+            makeFile("video"),
+            makeFile("img")
+        ]),
+
+        /* ---------- LOCAL DISK (C:) ---------- */
+        makeDrive("Local Disk (C:)", "C", 128, 87.4, [
+            makeFolder("Program Files", [
+                makeFolder("Microsoft Office", manyFiles(["exe", "dll", "log"], 16)),
+                makeFolder("Google", manyFiles(["exe", "dll"], 11)),
+                makeFolder("Adobe", manyFiles(["exe", "dll"], 13)),
+                makeFolder("Common Files", manyFiles(["dll"], 18)),
+                makeFolder("Windows NT", manyFiles(["dll", "log"], 7)),
+                makeFolder("Internet Explorer", manyFiles(["dll", "exe"], 6)),
+                makeFile("exe"),
+                makeFile("dll"),
+                makeFile("log")
+            ]),
+            makeFolder("Program Files (x86)", [
+                makeFolder("Steam", manyFiles(["exe", "dll"], 12)),
+                makeFolder("Common Files", manyFiles(["dll"], 14)),
+                makeFolder("Microsoft", manyFiles(["dll", "exe"], 9)),
+                makeFile("exe"),
+                makeFile("dll")
+            ]),
+            makeFolder("Users", [
+                makeFolder("NguynKmNgc", [
+                    makeFolder("Desktop", manyFiles(["txt", "img", "exe"], 6)),
+                    makeFolder("Documents", manyFiles(["doc", "pdf", "sheet"], 8)),
+                    makeFolder("Downloads", manyFiles(["exe", "zip", "pdf"], 9)),
+                    makeFolder("Pictures", manyFiles(["img"], 7)),
+                    makeFolder("Music", manyFiles(["audio"], 5)),
+                    makeFolder("Videos", manyFiles(["video"], 4)),
+                    makeFolder("AppData", [
+                        makeFolder("Local", manyFiles(["log", "dll"], 8)),
+                        makeFolder("Roaming", manyFiles(["log", "dll"], 7)),
+                        makeFolder("LocalLow", manyFiles(["log"], 3))
+                    ]),
+                    makeFile("log"),
+                    makeFile("txt")
+                ]),
+                makeFolder("Public", manyFiles(["img", "doc"], 5)),
+                makeFolder("Default", manyFiles(["log", "dll"], 6))
+            ]),
+            makeFolder("Windows", [
+                makeFolder("System32", manyFiles(["dll", "exe", "sys"], 26)),
+                makeFolder("SysWOW64", manyFiles(["dll", "exe"], 20)),
+                makeFolder("Fonts", manyFiles(["log"], 8)),
+                makeFolder("Temp", manyFiles(["log", "txt"], 9)),
+                makeFolder("Logs", manyFiles(["log"], 7)),
+                makeFolder("WinSxS", manyFiles(["dll", "log"], 14)),
+                makeFile("log"),
+                makeFile("dll")
+            ]),
+            makeFolder("PerfLogs", []),
+            makeFolder("Temp", manyFiles(["log", "txt", "zip"], 8)),
+            makeFolder("Recovery", manyFiles(["log"], 3)),
+            makeFile("sys"),
+            makeFile("sys"),
+            makeFile("sys"),
+            makeFile("log")
+        ]),
+
+        /* ---------- BT V5.3 (E:) ---------- */
+        makeDrive("BT V5.3 (E:)", "E", 64, 0, [])
+    ]
+};
+
+
+/* =========================================================
+   PHẦN 6: TRẠNG THÁI ỨNG DỤNG
+   ========================================================= */
+
+let currentPath = [FS];        // Đường dẫn hiện tại (mảng các node)
+let backStack = [];            // Ngăn xếp lùi
+let forwardStack = [];         // Ngăn xếp tiến
+let viewMode = "tiles";        // "tiles" hoặc "details"
+let searchQuery = "";          // Từ khóa tìm kiếm
+let selectedElement = null;    // Phần tử đang được chọn
+
+
+/* =========================================================
+   PHẦN 7: LẤY CÁC PHẦN TỬ DOM
+   ========================================================= */
+
+const titlebarIcon   = document.getElementById("titlebarIcon");
+const windowTitle    = document.getElementById("windowTitle");
+
+const btnMinimize    = document.getElementById("btnMinimize");
+const btnMaximize    = document.getElementById("btnMaximize");
+const btnClose       = document.getElementById("btnClose");
+
+const btnMenu        = document.getElementById("btnMenu");
+const btnBack        = document.getElementById("btnBack");
+const btnForward     = document.getElementById("btnForward");
+const btnUp          = document.getElementById("btnUp");
+
+const addressBar     = document.getElementById("addressBar");
+const searchBox      = document.getElementById("searchBox");
+const searchInput    = document.getElementById("searchInput");
+
+const sidebar        = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const content        = document.getElementById("content");
+
+const statusItems    = document.getElementById("statusItems");
+
+const btnTilesView   = document.getElementById("btnTilesView");
+const btnDetailsView = document.getElementById("btnDetailsView");
+
+const toastContainer = document.getElementById("toastContainer");
+
+
+/* =========================================================
+   PHẦN 8: HÀM TIỆN ÍCH GIAO DIỆN
+   ========================================================= */
+
+// Hiển thị toast thông báo
+function showToast(message, type) {
+    const toast = document.createElement("div");
+    toast.className = "toast" + (type === "warn" ? " warn" : "");
+
+    const icon = document.createElement("span");
+    icon.className = "toast-icon";
+    icon.textContent = type === "warn" ? "⚠️" : "ℹ️";
+
+    const text = document.createElement("span");
+    text.textContent = message;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+    toastContainer.appendChild(toast);
+
+    requestAnimationFrame(function () {
+        toast.classList.add("show");
+    });
+
+    setTimeout(function () {
+        toast.classList.remove("show");
+        setTimeout(function () {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 320);
+    }, 2600);
+}
+
+// Lấy icon HTML cho một node
+function getIconHTML(node) {
+    if (!node) return SVG_FOLDER;
+    if (node.type === "root") return SVG_THISPC;
+    if (node.type === "drive") return SVG_DRIVE;
+    if (node.type === "folder") return SVG_FOLDER;
+
+    const kind = node.kind || "txt";
+    const info = KINDS[kind];
+    return fileSVG(info ? info.color : "#607D8B");
+}
+
+// Lấy nhãn loại cho một node
+function getTypeLabel(node) {
+    if (!node) return "";
+    if (node.type === "root") return "Thư mục";
+    if (node.type === "drive") return "Ổ đĩa cục bộ";
+    if (node.type === "folder") return "Thư mục tệp";
+
+    const kind = node.kind || "txt";
+    const info = KINDS[kind];
+    return info ? info.label : "Tệp";
+}
+
+// Xóa lựa chọn hiện tại
+function clearSelection() {
+    if (selectedElement && selectedElement.parentNode) {
+        selectedElement.classList.remove("selected");
+    }
+    selectedElement = null;
+}
+
+// Đóng sidebar trên mobile
+function closeSidebar() {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+}
+
+// Mở sidebar trên mobile
+function openSidebar() {
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("show");
+}
+
+
+/* =========================================================
+   PHẦN 9: ĐIỀU HƯỚNG
+   ========================================================= */
+
+// Cập nhật trạng thái các nút điều hướng
+function updateNavButtons() {
+    btnBack.disabled = backStack.length === 0;
+    btnForward.disabled = forwardStack.length === 0;
+    btnUp.disabled = currentPath.length <= 1;
+}
+
+// Đặt đường dẫn mới (không ghi vào lịch sử)
+function setPath(newPath) {
+    currentPath = newPath;
+    searchQuery = "";
+    searchInput.value = "";
+    render();
+}
+
+// Mở một thư mục con (ghi vào lịch sử)
+function openNode(node) {
+    if (!node) return;
+    if (node.type === "file") return;
+
+    backStack.push(currentPath.slice());
+    forwardStack = [];
+    currentPath = currentPath.concat([node]);
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    render();
+}
+
+// Lùi lại
+function goBack() {
+    if (backStack.length === 0) return;
+    forwardStack.push(currentPath.slice());
+    currentPath = backStack.pop();
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    render();
+}
+
+// Tiến tới
+function goForward() {
+    if (forwardStack.length === 0) return;
+    backStack.push(currentPath.slice());
+    currentPath = forwardStack.pop();
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    render();
+}
+
+// Lên thư mục cha
+function goUp() {
+    if (currentPath.length <= 1) return;
+    backStack.push(currentPath.slice());
+    forwardStack = [];
+    currentPath = currentPath.slice(0, currentPath.length - 1);
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    render();
+}
+
+// Điều hướng theo chiều sâu trong breadcrumb
+function navigateToDepth(depth) {
+    if (depth < 0 || depth >= currentPath.length) return;
+    if (depth === currentPath.length - 1) return;
+
+    backStack.push(currentPath.slice());
+    forwardStack = [];
+    currentPath = currentPath.slice(0, depth + 1);
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    render();
+}
+
+// Điều hướng tới một node bất kỳ từ sidebar
+function navigateToNode(node) {
+    if (!node) return;
+    if (node === FS) {
+        backStack.push(currentPath.slice());
+        forwardStack = [];
+        currentPath = [FS];
+    } else {
+        backStack.push(currentPath.slice());
+        forwardStack = [];
+        currentPath = [FS, node];
+    }
+    searchQuery = "";
+    searchInput.value = "";
+    clearSelection();
+    closeSidebar();
+    render();
+}
+
+// Tìm node theo tên trong This PC
+function findRootChild(name) {
+    for (let i = 0; i < FS.children.length; i++) {
+        if (FS.children[i].name === name) {
+            return FS.children[i];
+        }
+    }
+    return null;
+}
+
+
+/* =========================================================
+   PHẦN 10: RENDER
+   ========================================================= */
+
+// Hàm render tổng
+function render() {
+    renderTitleBar();
+    renderBreadcrumb();
+    renderSidebar();
+    renderContent();
+    renderStatusBar();
+    updateNavButtons();
+}
+
+// Thanh tiêu đề
+function renderTitleBar() {
+    const node = currentPath[currentPath.length - 1];
+    windowTitle.textContent = node.name;
+    titlebarIcon.innerHTML = getIconHTML(node);
+}
+
+// Breadcrumb trên thanh địa chỉ
+function renderBreadcrumb() {
+    addressBar.innerHTML = "";
+
+    currentPath.forEach(function (node, index) {
+        if (index > 0) {
+            const sep = document.createElement("span");
+            sep.className = "crumb-sep";
+            sep.textContent = "›";
+            addressBar.appendChild(sep);
+        }
+
+        const crumb = document.createElement("button");
+        crumb.type = "button";
+        crumb.className = "crumb";
+        crumb.textContent = node.name;
+
+        if (index === currentPath.length - 1) {
+            crumb.classList.add("active");
+        }
+
+        crumb.addEventListener("click", function () {
+            navigateToDepth(index);
+        });
+
+        addressBar.appendChild(crumb);
+    });
+}
+
+// Sidebar
+function renderSidebar() {
+    sidebar.innerHTML = "";
+
+    const currentNode = currentPath[currentPath.length - 1];
+
+    // --- Mục "Truy cập nhanh" ---
+    const quickTitle = document.createElement("div");
+    quickTitle.className = "side-title";
+    quickTitle.textContent = "Truy cập nhanh";
+    sidebar.appendChild(quickTitle);
+
+    const quickItems = [
+        "Desktop", "Downloads", "Documents", "Pictures", "Music", "Videos"
+    ];
+
+    quickItems.forEach(function (name) {
+        const node = findRootChild(name);
+        if (!node) return;
+
+        const el = document.createElement("div");
+        el.className = "side-item";
+        if (node === currentNode) el.classList.add("active");
+
+        const iconWrap = document.createElement("span");
+        iconWrap.className = "side-item-icon";
+        iconWrap.innerHTML = SVG_FOLDER;
+
+        const label = document.createElement("span");
+        label.className = "side-item-label";
+        label.textContent = name;
+
+        el.appendChild(iconWrap);
+        el.appendChild(label);
+
+        el.addEventListener("click", function () {
+            navigateToNode(node);
+        });
+
+        sidebar.appendChild(el);
+    });
+
+    // --- Đường phân cách ---
+    const divider1 = document.createElement("div");
+    divider1.className = "side-divider";
+    sidebar.appendChild(divider1);
+
+    // --- Mục "This PC" ---
+    const pcTitle = document.createElement("div");
+    pcTitle.className = "side-title";
+    pcTitle.textContent = "This PC";
+    sidebar.appendChild(pcTitle);
+
+    // Nút This PC
+    const pcItem = document.createElement("div");
+    pcItem.className = "side-item";
+    if (currentNode === FS) pcItem.classList.add("active");
+
+    const pcIcon = document.createElement("span");
+    pcIcon.className = "side-item-icon";
+    pcIcon.innerHTML = SVG_THISPC;
+
+    const pcLabel = document.createElement("span");
+    pcLabel.className = "side-item-label";
+    pcLabel.textContent = "This PC";
+
+    pcItem.appendChild(pcIcon);
+    pcItem.appendChild(pcLabel);
+
+    pcItem.addEventListener("click", function () {
+        navigateToNode(FS);
+    });
+
+    sidebar.appendChild(pcItem);
+
+    // Danh sách các mục con của This PC
+    FS.children.forEach(function (node) {
+        const el = document.createElement("div");
+        el.className = "side-item";
+        if (node === currentNode) el.classList.add("active");
+
+        const iconWrap = document.createElement("span");
+        iconWrap.className = "side-item-icon";
+        iconWrap.innerHTML = getIconHTML(node);
+
+        const label = document.createElement("span");
+        label.className = "side-item-label";
+        label.textContent = node.name;
+
+        el.appendChild(iconWrap);
+        el.appendChild(label);
+
+        el.addEventListener("click", function () {
+            navigateToNode(node);
+        });
+
+        sidebar.appendChild(el);
+    });
+
+    // --- Đường phân cách ---
+    const divider2 = document.createElement("div");
+    divider2.className = "side-divider";
+    sidebar.appendChild(divider2);
+
+    // --- Mục "Network" ---
+    const netTitle = document.createElement("div");
+    netTitle.className = "side-title";
+    netTitle.textContent = "Network";
+    sidebar.appendChild(netTitle);
+
+    const netItem = document.createElement("div");
+    netItem.className = "side-item";
+
+    const netIcon = document.createElement("span");
+    netIcon.className = "side-item-icon";
+    netIcon.innerHTML =
+        '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle cx="24" cy="14" r="6" fill="#8FB8DD"/>' +
+            '<circle cx="11" cy="32" r="5" fill="#A8C8E4"/>' +
+            '<circle cx="37" cy="32" r="5" fill="#A8C8E4"/>' +
+            '<path d="M24 20v6M24 26l-11 3M24 26l11 3" stroke="#8FB8DD" stroke-width="2.4" stroke-linecap="round"/>' +
+        '</svg>';
+
+    const netLabel = document.createElement("span");
+    netLabel.className = "side-item-label";
+    netLabel.textContent = "Mạng";
+
+    netItem.appendChild(netIcon);
+    netItem.appendChild(net
