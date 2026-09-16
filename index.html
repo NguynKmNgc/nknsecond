@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f0c29">
+<title>Đổi Mã Nhận Tiền</title>
+<style>
+    /* ===================== RESET & BIẾN CHUNG ===================== */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+        --accent: #00e5a0;
+        --accent-2: #00b3ff;
+        --danger: #ff4d6d;
+        --warning: #ffb020;
+        --text: #ffffff;
+        --muted: rgba(255, 255, 255, 0.60);
+        --muted-2: rgba(255, 255, 255, 0.35);
+        --card-border: rgba(255, 255, 255, 0.12);
+        --radius-lg: 24px;
+        --radius-md: 16px;
+        --radius-sm: 14px;
+    }
+
+    html, body {
+        width: 100%;
+    }
+
+    body {
+        font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, Arial, sans-serif;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        color: var(--text);
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e, #0f0c29);
+        background-size: 400% 400%;
+        animation: backgroundMove 20s ease infinite;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    @keyframes backgroundMove {
+        0%   { background-position: 0% 50%; }
+        50%  { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* ===================== QUẢ CẦU TRANG TRÍ ===================== */
+    .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(90px);
+        opacity: 0.45;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .orb-1 {
+        width: 320px;
+        height: 320px;
+        background: #00e5a0;
+        top: -110px;
+        left: -110px;
+        animation: floatOrb1 15s ease-in-out infinite;
+    }
+
+    .orb-2 {
+        width: 360px;
+        height: 360px;
+        background: #7b2ff7;
+        bottom: -130px;
+        right: -130px;
+        animation: floatOrb2 18s ease-in-out infinite;
+    }
+
+    .orb-3 {
+        width: 250px;
+        height: 250px;
+        background: #00b3ff;
+        top: 45%;
+        left: 65%;
+        animation: floatOrb3 16s ease-in-out infinite;
+    }
+
+    @keyframes floatOrb1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(60px, 50px) scale(1.15); }
+    }
+
+    @keyframes floatOrb2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(-70px, -40px) scale(1.12); }
+    }
+
+    @keyframes floatOrb3 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(-50px, 60px) scale(0.9); }
+    }
+
+    /* ===================== MÀN HÌNH ===================== */
+    .screen {
+        display: none;
+        width: 100%;
+        max-width: 460px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .screen.active {
+        display: block;
+        animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(26px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===================== THẺ CARD ===================== */
+    .card {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        padding: 30px 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        box-shadow:
+            0 24px 60px rgba(0, 0, 0, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    /* ===================== MÀN HÌNH ĐĂNG NHẬP ===================== */
+    .login-head {
+        text-align: center;
+        margin-bottom: 26px;
+    }
+
+    .logo {
+        width: 74px;
+        height: 74px;
+        margin: 0 auto 16px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        background: linear-gradient(135deg, rgba(0, 229, 160, 0.25), rgba(0, 179, 255, 0.20));
+        border: 1px solid rgba(0, 229, 160, 0.35);
+        box-shadow: 0 12px 30px rgba(0, 229, 160, 0.22);
+        animation: logoPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes logoPulse {
+        0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 12px 30px rgba(0, 229, 160, 0.22); }
+        50%      { transform: translateY(-6px) scale(1.04); box-shadow: 0 20px 40px rgba(0, 229, 160, 0.35); }
+    }
+
+    .title {
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        background: linear-gradient(135deg, #ffffff, #9ff5d8 60%, #7fd8ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .subtitle {
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--muted);
+    }
+
+    /* ===================== FORM / INPUT ===================== */
+    .field {
+        margin-bottom: 16px;
+    }
+
+    .field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 15px 16px;
+        font-size: 16px;
+        font-family: inherit;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: var(--radius-sm);
+        outline: none;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder {
+        color: var(--muted-2);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.09);
+        box-shadow: 0 0 0 4px rgba(0, 229, 160, 0.15);
+    }
+
+    .password-wrap {
+        position: relative;
+    }
+
+    .password-wrap input {
+        padding-right: 54px;
+    }
+
+    .toggle-pass {
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        transform: translateY(-50%);
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        color: var(--muted);
+        background: transparent;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .toggle-pass:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+    }
+
+    /* ===================== NÚT BẤM ===================== */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: inherit;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 16px;
+        color: #04120c;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 12px 26px rgba(0, 229, 160, 0.28);
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.08);
+        transform: translateY(-2px);
+        box-shadow: 0 16px 34px rgba(0, 229, 160, 0.40);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    /* ===================== THÔNG BÁO LỖI ===================== */
+    .error-msg {
+        display: none;
+        margin-bottom: 14px;
+        padding: 11px 14px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #ffd7de;
+        background: rgba(255, 77, 109, 0.16);
+        border: 1px solid rgba(255, 77, 109, 0.42);
+        border-radius: 12px;
+        animation: fadeUp 0.3s ease;
+    }
+
+    .error-msg.show {
+        display: block;
+    }
+
+    .shake {
+        animation: shakeAnim 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes shakeAnim {
+        0%, 100%    { transform: translateX(0); }
+        15%, 45%, 75% { transform: translateX(-9px); }
+        30%, 60%, 90% { transform: translateX(9px); }
+    }
+
+    /* ===================== MÀN HÌNH CHÍNH ===================== */
+    .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .avatar {
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        font-weight: 800;
+        color: #04120c;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 8px 20px rgba(0, 229, 160, 0.30);
+    }
+
+    .hello {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+    }
+
+    .username {
+        font-size: 16.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 160px;
+    }
+
+    .btn-logout {
+        flex-shrink: 0;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        color: #ffd7de;
+        background: rgba(255, 77, 109, 0.14);
+        border: 1px solid rgba(255, 77, 109, 0.35);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .btn-logout:hover {
+        background: rgba(255, 77, 109, 0.26);
+    }
+
+    .btn-logout:active {
+        transform: scale(0.96);
+    }
+
+    /* ===================== HỘP SỐ DƯ ===================== */
+    .balance-box {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 24px;
+        padding: 22px 20px;
+        text-align: center;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(0, 229, 160, 0.18), rgba(0, 179, 255, 0.13));
+        border: 1px solid rgba(0, 229, 160, 0.30);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    }
+
+    .balance-box::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -120%;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+        animation: shine 4.5s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+        0%   { left: -120%; }
+        55%  { left: 130%; }
+        100% { left: 130%; }
+    }
+
+    .balance-label {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .balance-value {
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #ffffff, #8bf5d2);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        word-break: break-word;
+    }
+
+    .balance-box.pulse {
+        animation: balancePulse 0.6s ease;
+    }
+
+    @keyframes balancePulse {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.035); box-shadow: 0 0 0 8px rgba(0, 229, 160, 0.10); }
+        100% { transform: scale(1); }
+    }
+
+    .float-amount {
+        position: absolute;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--accent);
+        text-shadow: 0 0 18px rgba(0, 229, 160, 0.65);
+        pointer-events: none;
+        animation: floatUp 1.3s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+        0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.85); }
+        25%  { opacity: 1; transform: translate(-50%, -6px) scale(1.08); }
+        100% { opacity: 0; transform: translate(-50%, -62px) scale(1); }
+    }
+
+    /* ===================== KHU NHẬP MÃ ===================== */
+    .redeem-form {
+        margin-bottom: 26px;
+    }
+
+    .redeem-form label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: var(--muted);
+        margin-bottom: 9px;
+    }
+
+    .code-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    .code-row input {
+        flex: 1;
+        min-width: 0;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .btn-redeem {
+        flex-shrink: 0;
+        width: auto;
+        padding: 15px 24px;
+        font-size: 15px;
+        white-space: nowrap;
+    }
+
+    .hint {
+        margin-top: 9px;
+        font-size: 12.5px;
+        color: var(--muted-2);
+    }
+
+    /* ===================== LỊCH SỬ ===================== */
+    .history-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .history-head h2 {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+    .badge {
+        min-width: 26px;
+        padding: 3px 10px;
+        font-size: 12.5px;
+        font-weight: 800;
+        text-align: center;
+        color: #04120c;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-radius: 999px;
+    }
+
+    .history-list {
+        list-style: none;
+        max-height: 232px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .history-list::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .history-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.20);
+        border-radius: 999px;
+    }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        animation: itemIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes itemIn {
+        from { opacity: 0; transform: translateX(-14px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .hi-left {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    .hi-code {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        color: #b9ffe6;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .hi-time {
+        font-size: 11.5px;
+        color: var(--muted-2);
+    }
+
+    .hi-amount {
+        flex-shrink: 0;
+        font-size: 14.5px;
+        font-weight: 800;
+        color: var(--accent);
+    }
+
+    .empty-history {
+        padding: 18px 0;
+        text-align: center;
+        font-size: 13.5px;
+        color: var(--muted-2);
+    }
+
+    .empty-history.hidden {
+        display: none;
+    }
+
+    /* ===================== TOAST ===================== */
+    .toast-container {
+        position: fixed;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: calc(100% - 32px);
+        max-width: 420px;
+        pointer-events: none;
+    }
+
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 15px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        transform: translateY(-22px) scale(0.96);
+        transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .toast.success {
+        color: #c9ffec;
+        background: rgba(0, 229, 160, 0.17);
+        border: 1px solid rgba(0, 229, 160, 0.45);
+    }
+
+    .toast.error {
+        color: #ffd7de;
+        background: rgba(255, 77, 109, 0.17);
+        border: 1px solid rgba(255, 77, 109, 0.45);
+    }
+
+    .toast.info {
+        color: #d6efff;
+        background: rgba(0, 179, 255, 0.17);
+        border: 1px solid rgba(0, 179, 255, 0.45);
+    }
+
+    .toast-icon {
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 420px) {
+        body {
+            padding: 12px;
+        }
+
+        .card {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .title {
+            font-size: 20px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            font-size: 30px;
+            border-radius: 19px;
+        }
+
+        .balance-value {
+            font-size: 28px;
+        }
+
+        .username {
+            max-width: 120px;
+        }
+
+        .btn-redeem {
+            padding: 15px 18px;
+            font-size: 14.5px;
+        }
+
+        .code-row input {
+            letter-spacing: 1.4px;
+            font-size: 15px;
+            padding: 15px 12px;
+        }
+
+        .history-list {
+            max-height: 200px;
+        }
+    }
+
+    @media (min-width: 900px) {
+        .screen {
+            max-width: 480px;
+        }
+
+        .card {
+            padding: 34px 32px;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <!-- Quả cầu trang trí nền -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Khu vực hiển thị thông báo (toast) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- ===================== MÀN HÌNH ĐĂNG NHẬP ===================== -->
+    <section id="loginScreen" class="screen active">
+        <div class="card">
+            <div class="login-head">
+                <div class="logo">💰</div>
+                <h1 class="title">Đổi Mã Nhận Tiền</h1>
+                <p class="subtitle">Vui lòng đăng nhập để tiếp tục</p>
+            </div>
+
+            <form id="loginForm" autocomplete="off" novalidate>
+                <div class="field">
+                    <label for="usernameInput">Tên tài khoản</label>
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        placeholder="Nhập tên tài khoản"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="passwordInput">Mật khẩu</label>
+                    <div class="password-wrap">
+                        <input
+                            type="password"
+                            id="passwordInput"
+                            placeholder="Nhập mật khẩu"
+                            autocomplete="off"
+                        >
+                        <button type="button" id="togglePasswordBtn" class="toggle-pass" title="Hiện / ẩn mật khẩu">👁</button>
+                    </div>
+                </div>
+
+                <p id="loginError" class="error-msg"></p>
+
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===================== MÀN HÌNH CHÍNH ===================== -->
+    <section id="mainScreen" class="screen">
+        <div class="card">
+
+            <header class="app-header">
+                <div class="user-info">
+                    <div class="avatar" id="avatarLetter">N</div>
+                    <div>
+                        <p class="hello">Xin chào,</p>
+                        <p class="username" id="displayUsername">NguynKmNgc</p>
+                    </div>
+                </div>
+                <button type="button" id="logoutBtn" class="btn-logout">Đăng xuất</button>
+            </header>
+
+            <div class="balance-box" id="balanceBox">
+                <p class="balance-label">Số dư hiện tại</p>
+                <p class="balance-value" id="balanceValue">0 ₫</p>
+            </div>
+
+            <form id="redeemForm" class="redeem-form" autocomplete="off" novalidate>
+                <label for="codeInput">Nhập mã đổi tiền</label>
+                <div class="code-row">
+                    <input
+                        type="text"
+                        id="codeInput"
+                        maxlength="10"
+                        placeholder="VD: QWERTYUIOP"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                    >
+                    <button type="submit" class="btn btn-primary btn-redeem">Đổi</button>
+                </div>
+                <p class="hint">Mã gồm 10 ký tự in hoa, không chứa số. Mỗi mã chỉ dùng được 1 lần.</p>
+            </form>
+
+            <div class="history-section">
+                <div class="history-head">
+                    <h2>Lịch sử đổi mã</h2>
+                    <span class="badge" id="historyCount">0</span>
+                </div>
+                <ul id="historyList" class="history-list"></ul>
+                <p id="emptyHistory" class="empty-history">Chưa có mã nào được đổi.</p>
+            </div>
+
+        </div>
+    </section>
+
+<script>
+    /* =========================================================
+       1. DỮ LIỆU TÀI KHOẢN & DANH SÁCH MÃ HỢP LỆ
+       ========================================================= */
+    const ACCOUNT_USERNAME = "NguynKmNgc";
+    const ACCOUNT_PASSWORD = "123456789";
+
+    // 20 mã hợp lệ - mỗi mã 10 ký tự IN HOA, không chứa số
+    const VALID_CODES = [
+        "QWERTYUIOP",
+        "ASDFGHJKLZ",
+        "ZXCVBNMLKJ",
+        "POIUYTREWA",
+        "LKJHGFDSAM",
+        "MNBVCXZLKQ",
+        "PLMOKNIJBY",
+        "QAZWSXEDCR",
+        "TGBYHNUJMI",
+        "RFVTGBYHNU",
+        "EDCRFVTYUJ",
+        "OKMIJNUHBY",
+        "WSXEDCRFVT",
+        "YHNUJMIKOL",
+        "IOPLKJHGFD",
+        "CXZASWDQWE",
+        "BGTYHNJUIM",
+        "NHDGTRFVCX",
+        "MKOIJNUHBY",
+        "LOPQAZWSXE"
+    ];
+
+    const MIN_AMOUNT = 1000;
+    const MAX_AMOUNT = 10000;
+
+    /* =========================================================
+       2. TRẠNG THÁI ỨNG DỤNG
+       ========================================================= */
+    let currentUsername = "";
+    let balance = 0;
+    let usedCodes = [];      // Danh sách mã đã dùng
+    let historyItems = [];   // Lịch sử đổi mã
+    let isAnimatingBalance = false;
+
+    /* =========================================================
+       3. LẤY CÁC PHẦN TỬ DOM
+       ========================================================= */
+    const loginScreen = document.getElementById("loginScreen");
+    const mainScreen = document.getElementById("mainScreen");
+
+    const loginForm = document.getElementById("loginForm");
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+    const loginError = document.getElementById("loginError");
+
+    const displayUsername = document.getElementById("displayUsername");
+    const avatarLetter = document.getElementById("avatarLetter");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const balanceBox = document.getElementById("balanceBox");
+    const balanceValue = document.getElementById("balanceValue");
+
+    const redeemForm = document.getElementById("redeemForm");
+    const codeInput = document.getElementById("codeInput");
+
+    const historyList = document.getElementById("historyList");
+    const historyCount = document.getElementById("historyCount");
+    const emptyHistory = document.getElementById("emptyHistory");
+
+    const toastContainer = document.getElementById("toastContainer");
+
+    /* =========================================================
+       4. CÁC HÀM TIỆN ÍCH
+       ========================================================= */
+
+    // Định dạng tiền tệ Việt Nam: 1234 -> "1.234 ₫"
+    function formatMoney(number) {
+        return number.toLocaleString("vi-VN") + " ₫";
+    }
+
+    // Hiển thị thông báo dạng toast
+    // type: "success" | "error" | "info"
+    function showToast(message, type) {
+        const toastType = type || "info";
+
+        const toast = document.createElement("div");
+        toast.className = "toast " + toastType;
+
+        const iconSpan = document.createElement("span");
+        iconSpan.className = "toast-icon";
+        if (toastType === "success") {
+            iconSpan.textContent = "✅";
+        } else if (toastType === "error") {
+            iconSpan.textContent = "⚠️";
+        } else {
+            iconSpan.textContent = "ℹ️";
+        }
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = message;
+
+        toast.appendChild(iconSpan);
+        toast.appendChild(textSpan);
+        toastContainer.appendChild(toast);
+
+        // Kích hoạt hiệu ứng hiện ra
+        requestAnimationFrame(function () {
+            toast.classList.add("show");
+        });
+
+        // Tự động biến mất sau 3 giây
+        setTimeout(function () {
+            toast.classList.remove("show");
+            setTimeout(function () {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 350);
+        }, 3000);
+    }
+
+    // Tạo hiệu ứng rung cho một phần tử
+    function shakeElement(element) {
+        element.classList.remove("shake");
+        // Buộc trình duyệt tính toán lại để animation chạy lại
+        void element.offsetWidth;
+        element.classList.add("shake");
+
+        setTimeout(function () {
+            element.classList.remove("shake");
+        }, 500);
+    }
+
+    // Sinh số tiền ngẫu nhiên từ 1.000 đến 10.000 VND
+    function generateRandomAmount() {
+        const range = MAX_AMOUNT - MIN_AMOUNT + 1;
+        return Math.floor(Math.random() * range) + MIN_AMOUNT;
+    }
+
+    // Lấy giờ hiện tại dạng HH:MM:SS
+    function getCurrentTimeString() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+        return hours + ":" + minutes + ":" + seconds;
+    }
+
+    // Hiệu ứng đếm số dư tăng dần
+    function animateBalance(fromValue, toValue) {
+        if (isAnimatingBalance) {
+            balanceValue.textContent = formatMoney(toValue);
+            return;
+        }
+
+        isAnimatingBalance = true;
+        const duration = 750;
+        const startTime = performance.now();
+
+        function step(currentTime) {
+            const elapsed = currentTime - startTime;
+            let progress = elapsed / duration;
+
+            if (progress > 1) {
+                progress = 1;
+            }
+
+            // Giảm tốc (ease-out cubic)
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(fromValue + (toValue - fromValue) * eased);
+
+            balanceValue.textContent = formatMoney(currentValue);
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                balanceValue.textContent = formatMoney(toValue);
+                isAnimatingBalance = false;
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    // Hiệu ứng nhấp nháy hộp số dư + số tiền bay lên
+    function playBalanceSuccessEffect(amount) {
+        balanceBox.classList.remove("pulse");
+        void balanceBox.offsetWidth;
+        balanceBox.classList.add("pulse");
+
+        setTimeout(function () {
+            balanceBox.classList.remove("pulse");
+        }, 700);
+
+        const floatEl = document.createElement("span");
+        floatEl.className = "float-amount";
+        floatEl.textContent = "+" + formatMoney(amount);
+        balanceBox.appendChild(floatEl);
+
+        setTimeout(function () {
+            if (floatEl.parentNode) {
+                floatEl.parentNode.removeChild(floatEl);
+            }
+        }, 1400);
+    }
+
+    /* =========================================================
+       5. XỬ LÝ ĐĂNG NHẬP
+       ========================================================= */
+
+    // Hiện / ẩn mật khẩu
+    togglePasswordBtn.addEventListener("click", function () {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            togglePasswordBtn.textContent = "🙈";
+        } else {
+            passwordInput.type = "password";
+            togglePasswordBtn.textContent = "👁";
+        }
+    });
+
+    // Hiển thị lỗi đăng nhập
+    function showLoginError(message) {
+        loginError.textContent = message;
+        loginError.classList.add("show");
+    }
+
+    // Ẩn lỗi đăng nhập
+    function hideLoginError() {
+        loginError.textContent = "";
+        loginError.classList.remove("show");
+    }
+
+    // Xử lý submit form đăng nhập
+    loginForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const enteredUsername = usernameInput.value.trim();
+        const enteredPassword = passwordInput.value;
+
+        // Kiểm tra bỏ trống
+        if (enteredUsername === "" || enteredPassword === "") {
+            showLoginError("Vui lòng nhập đầy đủ tên tài khoản và mật khẩu.");
+            shakeElement(loginForm);
+            return;
+        }
+
+        // Kiểm tra chính xác
+        if (enteredUsername === ACCOUNT_USERNAME && enteredPassword === ACCOUNT_PASSWORD) {
+            hideLoginError();
+            loginSuccess(enteredUsername);
+        } else {
+            showLoginError("Sai tên tài khoản hoặc mật khẩu. Vui lòng nhập lại!");
+            shakeElement(loginForm);
+            passwordInput.value = "";
+            passwordInput.focus();
+        }
+    });
+
+    // Xóa lỗi khi người dùng bắt đầu nhập lại
+    usernameInput.addEventListener("input", hideLoginError);
+    passwordInput.addEventListener("input", hideLoginError);
+
+    // Đăng nhập thành công
+    function loginSuccess(username) {
+        currentUsername = username;
+        balance = 0;
+        usedCodes = [];
+        historyItems = [];
+        isAnimatingBalance = false;
+
+        // Cập nhật giao diện màn hình chính
+        displayUsername.textContent = currentUsername;
+        avatarLetter.textContent = currentUsername.charAt(0).toUpperCase();
+        balanceValue.textContent = formatMoney(0);
+
+        // Xóa lịch sử hiển thị
+        historyList.innerHTML = "";
+        historyCount.textContent = "0";
+        emptyHistory.classList.remove("hidden");
+
+        // Xóa nội dung ô nhập mã
+        codeInput.value = "";
+
+        // Chuyển màn hình
+        loginScreen.classList.remove("active");
+        mainScreen.classList.add("active");
+
+        // Xóa mật khẩu đã nhập
+        usernameInput.value = "";
+        passwordInput.value = "";
+        passwordInput.type = "password";
+        togglePasswordBtn.textContent = "👁";
+
+        showToast("Đăng nhập thành công! Xin chào " + currentUsername, "success");
+
+        // Focus vào ô nhập mã sau khi chuyển màn hình
+        setTimeout(function () {
+            codeInput.focus();
+        }, 450);
+    }
+
+    /* =========================================================
+       6. XỬ LÝ ĐĂNG XUẤT
+       ========================================================= */
+    logoutBtn.addEventListener("click", function () {
+        // Đặt lại toàn bộ trạng thái
+        currentUsername = "";
+        balance = 0;
+        usedCodes = [];
+        historyItems = [];
+        isAnimatingBalance = false;
+
+        historyList.innerHTML = "";
+        historyCount.textContent = "0";
+        emptyHistory.classList.remove("hidden");
+        codeInput.value = "";
+        balanceValue.textContent = formatMoney(0);
+
+        // Chuyển về màn hình đăng nhập
+        mainScreen.classList.remove("active");
+        loginScreen.classList.add("active");
+
+        hideLoginError();
+
+        showToast("Đã đăng xuất khỏi tài khoản.", "info");
+
+        setTimeout(function () {
+            usernameInput.focus();
+        }, 450);
+    });
+
+    /* =========================================================
+       7. XỬ LÝ NHẬP MÃ ĐỔI TIỀN
+       ========================================================= */
+
+    // Tự động chuyển thành chữ IN HOA và loại bỏ ký tự không hợp lệ
+    codeInput.addEventListener("input", function () {
+        let value = codeInput.value.toUpperCase();
+        // Chỉ giữ lại chữ cái A-Z
+        value = value.replace(/[^A-Z]/g, "");
+        // Giới hạn 10 ký tự
+        value = value.slice(0, 10);
+        codeInput.value = value;
+    });
+
+    // Thêm một dòng vào lịch sử
+    function addHistoryItem(code, amount) {
+        const listItem = document.createElement("li");
+        listItem.className = "history-item";
+
+        const leftDiv = document.createElement("div");
+        leftDiv.className = "hi-left";
+
+        const codeSpan = document.createElement("span");
+        codeSpan.className = "hi-code";
+        codeSpan.textContent = code;
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "hi-time";
+        timeSpan.textContent = "Lúc " + getCurrentTimeString();
+
+        leftDiv.appendChild(codeSpan);
+        leftDiv.appendChild(timeSpan);
+
+        const amountSpan = document.createElement("span");
+        amountSpan.className = "hi-amount";
+        amountSpan.textContent = "+" + formatMoney(amount);
+
+        listItem.appendChild(leftDiv);
+        listItem.appendChild(amountSpan);
+
+        // Thêm lên đầu danh sách
+        historyList.insertBefore(listItem, historyList.firstChild);
+    }
+
+    // Cập nhật số lượng lịch sử
+    function updateHistoryCount() {
+        historyCount.textContent = String(historyItems.length);
+
+        if (historyItems.length === 0) {
+            emptyHistory.classList.remove("hidden");
+        } else {
+            emptyHistory.classList.add("hidden");
+        }
+    }
+
+    // Xử lý submit form đổi mã
+    redeemForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const enteredCode = codeInput.value.trim().toUpperCase();
+
+        // 1. Kiểm tra bỏ trống
+        if (enteredCode === "") {
+            showToast("Vui lòng nhập mã đổi tiền!", "error");
+            shakeElement(redeemForm);
+            codeInput.focus();
+            return;
+        }
+
+        // 2. Kiểm tra độ dài
+        if (enteredCode.length !== 10) {
+            showToast("Mã phải có đúng 10 ký tự chữ in hoa!", "error");
+            shakeElement(redeemForm);
+            codeInput.focus();
+            return;
+        }
+
+        // 3. Kiểm tra mã đã được sử dụng chưa
+        if (usedCodes.indexOf(enteredCode) !== -1) {
+            showToast("Mã \"" + enteredCode + "\" đã được sử dụng rồi!", "error");
+            shakeElement(redeemForm);
+            codeInput.value = "";
+            codeInput.focus();
+            return;
+        }
+
+        // 4. Kiểm tra mã có hợp lệ không
+        if (VALID_CODES.indexOf(enteredCode) === -1) {
+            showToast("Mã không hợp lệ. Vui lòng kiểm tra lại!", "error");
+            shakeElement(redeemForm);
+            codeInput.value = "";
+            codeInput.focus();
+            return;
+        }
+
+        // 5. Mã hợp lệ -> sinh số tiền ngẫu nhiên và cộng vào số dư
+        const amount = generateRandomAmount();
+        const oldBalance = balance;
+
+        usedCodes.push(enteredCode);
+        balance = balance + amount;
+        historyItems.push({
+            code: enteredCode,
+            amount: amount,
+            time: getCurrentTimeString()
+        });
+
+        addHistoryItem(enteredCode, amount);
+        updateHistoryCount();
+
+        animateBalance(oldBalance, balance);
+        playBalanceSuccessEffect(amount);
+
+        showToast("Đổi mã thành công! Bạn nhận được " + formatMoney(amount), "success");
+
+        // Xóa ô nhập và focus lại để nhập mã tiếp theo
+        codeInput.value = "";
+        codeInput.focus();
+    });
+
+    /* =========================================================
+       8. KHỞI TẠO ỨNG DỤNG
+       ========================================================= */
+    function initApp() {
+        balanceValue.textContent = formatMoney(0);
+        historyCount.textContent = "0";
+        emptyHistory.classList.remove("hidden");
+        loginScreen.classList.add("active");
+        mainScreen.classList.remove("active");
+
+        setTimeout(function () {
+            usernameInput.focus();
+        }, 350);
+    }
+
+    initApp();
+</script>
+</body>
+</html>
