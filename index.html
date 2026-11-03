@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>NNN 2026 — Global Survival Dashboard</title>
+<style>
+  :root{
+    --bg:#080D18;
+    --card:#0F1928;
+    --card-hi:#132135;
+    --line:rgba(122,164,205,0.14);
+    --line-soft:rgba(122,164,205,0.075);
+    --text:#E8F0F9;
+    --muted:#7B8FA8;
+    --green:#59E0AD;
+    --red:#FF8796;
+    --blue:#6FA8FF;
+    --purple:#C08CFF;
+    --amber:#FFC978;
+    --radius:16px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{-webkit-text-size-adjust:100%}
+
+  body{
+    background:
+      radial-gradient(1100px 560px at 50% -12%, rgba(89,224,173,0.075), transparent 62%),
+      radial-gradient(900px 520px at 88% 8%, rgba(255,135,150,0.055), transparent 60%),
+      radial-gradient(900px 600px at 8% 40%, rgba(111,168,255,0.04), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+
+  .mono{
+    font-family:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-variant-numeric:tabular-nums;
+    font-feature-settings:"tnum" 1;
+  }
+
+  .wrap{max-width:1200px;margin:0 auto;padding:0 18px}
+
+  /* ============ HEADER ============ */
+  .topbar{
+    position:sticky;top:0;z-index:60;
+    background:rgba(8,13,24,0.80);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .topbar-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:14px;flex-wrap:wrap;padding:12px 0;
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo{
+    width:40px;height:40px;flex:0 0 40px;border-radius:11px;
+    display:grid;place-items:center;
+    font-weight:800;font-size:19px;letter-spacing:-0.5px;
+    color:#04120D;
+    background:linear-gradient(145deg,#7DF3C4,#3FC292);
+    box-shadow:0 0 0 1px rgba(89,224,173,0.35), 0 6px 20px rgba(89,224,173,0.28);
+  }
+  .brand-text{display:flex;flex-direction:column;min-width:0}
+  .brand-main{
+    font-size:13px;font-weight:700;letter-spacing:1.6px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .brand-sub{font-size:10.5px;color:var(--muted);letter-spacing:1.1px;text-transform:uppercase}
+
+  .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  .live{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:10.5px;font-weight:700;letter-spacing:1.4px;
+    color:var(--green);
+    background:rgba(89,224,173,0.08);
+    border:1px solid rgba(89,224,173,0.26);
+    padding:7px 12px;border-radius:999px;
+    white-space:nowrap;
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(89,224,173,0.65);
+    animation:pulseDot 1.8s ease-out infinite;
+    flex:0 0 auto;
+  }
+  @keyframes pulseDot{
+    0%{box-shadow:0 0 0 0 rgba(89,224,173,0.6);opacity:1}
+    70%{box-shadow:0 0 0 9px rgba(89,224,173,0);opacity:0.75}
+    100%{box-shadow:0 0 0 0 rgba(89,224,173,0);opacity:1}
+  }
+
+  .sound-btn{
+    font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:1.3px;
+    color:var(--muted);
+    background:var(--card);
+    border:1px solid var(--line);
+    padding:8px 13px;border-radius:999px;
+    cursor:pointer;
+    transition:color .18s, border-color .18s, background .18s, box-shadow .18s;
+    white-space:nowrap;
+  }
+  .sound-btn:hover{color:var(--text);border-color:rgba(122,164,205,0.3)}
+  .sound-btn.on{
+    color:var(--green);
+    border-color:rgba(89,224,173,0.45);
+    background:rgba(89,224,173,0.09);
+    box-shadow:0 0 16px rgba(89,224,173,0.14);
+  }
+  .sound-btn:focus-visible,.sound-btn:focus{outline:2px solid rgba(89,224,173,0.55);outline-offset:2px}
+
+  /* ============ HERO ============ */
+  .hero{text-align:center;padding:52px 0 8px}
+  .hero-badge{
+    display:inline-block;
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--amber);
+    background:rgba(255,201,120,0.07);
+    border:1px solid rgba(255,201,120,0.25);
+    padding:6px 14px;border-radius:999px;
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:clamp(2rem, 7.4vw, 4.4rem);
+    line-height:1.02;
+    font-weight:800;
+    letter-spacing:-0.03em;
+    background:linear-gradient(180deg,#FFFFFF 8%, #9FB6CE 62%, #6E859E 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;
+    text-shadow:0 0 60px rgba(89,224,173,0.10);
+    word-break:break-word;
+  }
+  .hero-sub{
+    color:var(--muted);
+    font-size:clamp(12.5px, 2.4vw, 15px);
+    margin-top:16px;
+    max-width:640px;margin-left:auto;margin-right:auto;
+  }
+  .hero-note{
+    font-size:10.5px;letter-spacing:1.4px;color:rgba(123,143,168,0.8);
+    margin-top:10px;text-transform:uppercase;
+  }
+  .day-pill{
+    display:inline-flex;align-items:center;gap:10px;
+    margin-top:26px;
+    padding:11px 20px;border-radius:12px;
+    background:linear-gradient(180deg, rgba(19,33,53,0.95), rgba(15,25,40,0.95));
+    border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.035);
+    font-size:11px;letter-spacing:2px;font-weight:700;color:var(--muted);
+    flex-wrap:wrap;justify-content:center;
+  }
+  .day-pill strong{
+    font-size:15px;letter-spacing:1px;color:var(--green);
+    text-shadow:0 0 18px rgba(89,224,173,0.45);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ============ SECTIONS ============ */
+  .section{margin-top:30px}
+
+  .card{
+    background:linear-gradient(180deg, var(--card-hi), var(--card) 55%);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:0 18px 44px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.035);
+    padding:20px;
+  }
+
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .panel-title{
+    font-size:11px;font-weight:800;letter-spacing:2px;color:var(--muted);
+    display:flex;align-items:center;gap:9px;
+  }
+  .panel-title::before{
+    content:"";width:3px;height:14px;border-radius:2px;
+    background:var(--green);box-shadow:0 0 10px rgba(89,224,173,0.6);
+  }
+  .panel-title.red::before{background:var(--red);box-shadow:0 0 10px rgba(255,135,150,0.6)}
+  .panel-title.blue::before{background:var(--blue);box-shadow:0 0 10px rgba(111,168,255,0.6)}
+
+  /* ============ STAT CARDS ============ */
+  .stats{
+    display:grid;gap:16px;
+    grid-template-columns:1fr;
+    margin-top:34px;
+  }
+  @media (min-width:760px){ .stats{grid-template-columns:1fr 1fr} }
+
+  .stat-card{
+    position:relative;overflow:hidden;
+    background:linear-gradient(180deg, var(--card-hi), var(--card) 60%);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:0 18px 44px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.035);
+  }
+  .stat-card::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    border-radius:var(--radius);
+    background:radial-gradient(340px 140px at 50% 0%, var(--glow), transparent 72%);
+    opacity:.9;
+  }
+  .stat-card.green{--glow:rgba(89,224,173,0.15);border-color:rgba(89,224,173,0.22)}
+  .stat-card.red{--glow:rgba(255,135,150,0.14);border-color:rgba(255,135,150,0.22)}
+
+  .stat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+  .stat-title{font-size:12px;font-weight:800;letter-spacing:2.2px}
+  .stat-card.green .stat-title{color:var(--green);text-shadow:0 0 18px rgba(89,224,173,0.4)}
+  .stat-card.red .stat-title{color:var(--red);text-shadow:0 0 18px rgba(255,135,150,0.4)}
+  .stat-tag{
+    font-size:9.5px;font-weight:700;letter-spacing:1.4px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:4px 9px;
+    white-space:nowrap;
+  }
+  .stat-value{
+    position:relative;z-index:1;
+    margin:16px 0 8px;
+    font-size:clamp(1.45rem, 5.4vw, 2.55rem);
+    font-weight:700;letter-spacing:-0.02em;
+    line-height:1.05;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+    font-family:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  .stat-card.green .stat-value{color:var(--green);text-shadow:0 0 34px rgba(89,224,173,0.42)}
+  .stat-card.red .stat-value{color:var(--red);text-shadow:0 0 34px rgba(255,135,150,0.38)}
+  .stat-foot{position:relative;z-index:1;font-size:11.5px;color:var(--muted);letter-spacing:.3px}
+  .stat-foot b{color:var(--text);font-variant-numeric:tabular-nums}
+  .stat-foot b.g{color:var(--green)}
+  .stat-foot b.r{color:var(--red)}
+
+  /* ============ PROGRESS ============ */
+  .rate-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .rate-big{
+    font-size:clamp(1.3rem,4.4vw,1.9rem);font-weight:700;color:var(--green);
+    text-shadow:0 0 26px rgba(89,224,173,0.35);
+    font-variant-numeric:tabular-nums;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .bar{
+    position:relative;height:14px;border-radius:999px;
+    background:#0A1421;
+    border:1px solid var(--line-soft);
+    overflow:hidden;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.6);
+  }
+  .bar-fill{
+    height:100%;width:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg, rgba(89,224,173,0.55), var(--green));
+    box-shadow:0 0 18px rgba(89,224,173,0.55), 0 0 42px rgba(89,224,173,0.22);
+    transition:width .28s linear;
+    will-change:width;
+  }
+  .bar-legend{
+    display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;
+    font-size:11px;letter-spacing:1px;color:var(--muted);
+  }
+  .lg{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+  .lg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .lg.g i{background:var(--green);box-shadow:0 0 10px rgba(89,224,173,0.7)}
+  .lg.r i{background:var(--red);box-shadow:0 0 10px rgba(255,135,150,0.7)}
+  .lg b{color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:0}
+
+  /* ============ CHART ============ */
+  .chart-canvas{
+    width:100%;
+    height:clamp(220px,34vw,340px);
+    display:block;
+    border-radius:10px;
+  }
+  .chart-legend{
+    display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;
+    font-size:10.5px;letter-spacing:1.2px;color:var(--muted);font-weight:700;
+  }
+  .chart-legend .lg i{width:14px;height:3px;border-radius:2px}
+
+  /* ============ COUNTDOWN ============ */
+  .countdown{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .cd-box{
+    background:linear-gradient(180deg, rgba(19,33,53,0.9), rgba(10,20,33,0.9));
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 6px;
+    text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 22px rgba(0,0,0,0.3);
+    min-width:0;
+  }
+  .cd-box span{
+    display:block;
+    font-size:clamp(1.25rem,5.2vw,2.1rem);
+    font-weight:700;
+    color:var(--text);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.02em;
+    line-height:1.1;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    text-shadow:0 0 24px rgba(111,168,255,0.25);
+  }
+  .cd-box small{
+    display:block;margin-top:8px;
+    font-size:9px;font-weight:700;letter-spacing:1.8px;color:var(--muted);
+  }
+  .cd-note{
+    margin-top:14px;font-size:11px;letter-spacing:1.2px;color:var(--muted);
+    text-align:center;
+  }
+  .cd-note.done{color:var(--green);text-shadow:0 0 18px rgba(89,224,173,0.35)}
+
+  /* ============ OVERVIEW / MAP ============ */
+  .overview{
+    display:grid;gap:18px;
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+  @media (min-width:900px){ .overview{grid-template-columns:1.25fr 1fr} }
+
+  .map-wrap{
+    position:relative;
+    background:radial-gradient(600px 320px at 50% 40%, rgba(89,224,173,0.055), transparent 70%), #0A1420;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    overflow:hidden;
+    min-height:220px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .map{width:100%;height:auto;display:block;max-height:330px}
+  .map .gridlines line{stroke:rgba(122,164,205,0.09);stroke-width:1}
+  .map .continents path{
+    fill:url(#mapFill);
+    stroke:rgba(89,224,173,0.32);
+    stroke-width:1.3;
+    stroke-linejoin:round;
+  }
+  .map .pulse{fill:#59E0AD;filter:drop-shadow(0 0 6px rgba(89,224,173,0.9))}
+  .map .ring{
+    fill:none;stroke:#59E0AD;stroke-width:1.4;
+    transform-box:fill-box;transform-origin:center;
+    animation:ringPulse 3.2s ease-out infinite;
+  }
+  .map .ring.r2{stroke:#FF8796;animation-delay:.8s}
+  .map .ring.r3{stroke:#6FA8FF;animation-delay:1.6s}
+  .map .ring.r4{stroke:#FFC978;animation-delay:2.4s}
+  @keyframes ringPulse{
+    0%{opacity:.85;transform:scale(.25)}
+    100%{opacity:0;transform:scale(1.5)}
+  }
+
+  .regions{display:flex;flex-direction:column;gap:14px;justify-content:center}
+  .region{
+    background:rgba(10,20,33,0.55);
+    border:1px solid var(--line-soft);
+    border-radius:11px;
+    padding:12px 13px;
+  }
+  .region-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+  .region-name{
+    font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--text);
+    display:inline-flex;align-items:center;gap:8px;min-width:0;
+  }
+  .swatch{width:8px;height:8px;border-radius:2px;flex:0 0 8px;display:inline-block}
+  .region-val{
+    font-size:12.5px;font-weight:700;color:var(--green);
+    font-variant-numeric:tabular-nums;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    white-space:nowrap;
+  }
+  .region-bar{
+    height:6px;border-radius:999px;background:#0A1421;overflow:hidden;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.65);
+  }
+  .region-fill{
+    height:100%;border-radius:999px;width:0%;
+    transition:width .3s linear;
+    will-change:width;
+  }
+  .region-sub{
+    margin-top:8px;font-size:10px;letter-spacing:.6px;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ============ TABLE ============ */
+  .table-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:12px;
+    border:1px solid var(--line-soft);
+  }
+  table{width:100%;border-collapse:collapse;min-width:520px}
+  thead th{
+    position:sticky;top:0;
+    background:#0C1626;
+    font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--muted);
+    text-align:right;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+    z-index:2;
+  }
+  thead th:first-child{text-align:left}
+  tbody td{
+    padding:10px 14px;
+    font-size:12.5px;
+    text-align:right;
+    border-bottom:1px solid rgba(122,164,205,0.055);
+    font-variant-numeric:tabular-nums;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color:#C3D2E2;
+    white-space:nowrap;
+  }
+  tbody td:first-child{
+    text-align:left;
+    font-family:inherit;
+    font-weight:700;font-size:11px;letter-spacing:1.2px;
+    color:var(--muted);
+  }
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.future td{color:#3E5064}
+  tbody tr.current td{
+    background:rgba(89,224,173,0.075);
+    color:var(--green);
+    font-weight:700;
+  }
+  tbody tr.current td:first-child{
+    color:var(--green);
+    box-shadow:inset 3px 0 0 var(--green);
+  }
+  tbody tr:hover td{background:rgba(122,164,205,0.045)}
+  tbody tr.current:hover td{background:rgba(89,224,173,0.10)}
+
+  /* ============ ENGINE / FOOTER ============ */
+  .engine{margin-top:30px;margin-bottom:52px}
+  .engine-grid{
+    display:grid;gap:14px;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    margin-bottom:20px;
+  }
+  .engine-item{min-width:0}
+  .engine-item .k{
+    display:block;font-size:9.5px;font-weight:800;letter-spacing:1.7px;color:var(--muted);
+    margin-bottom:6px;
+  }
+  .engine-item .v{
+    display:block;font-size:13px;font-weight:700;color:var(--text);
+    overflow-wrap:anywhere;
+  }
+  .engine-item .v.ok{color:var(--green);text-shadow:0 0 16px rgba(89,224,173,0.4)}
+
+  .warn{
+    text-align:center;
+    font-size:12px;font-weight:800;letter-spacing:2.4px;
+    color:var(--amber);
+    background:rgba(255,201,120,0.06);
+    border:1px dashed rgba(255,201,120,0.34);
+    border-radius:12px;
+    padding:14px 12px;
+    margin-bottom:16px;
+    text-shadow:0 0 22px rgba(255,201,120,0.28);
+    overflow-wrap:anywhere;
+  }
+  .disclaimer{
+    text-align:center;font-size:11.5px;color:var(--muted);
+    max-width:760px;margin:0 auto;line-height:1.7;
+  }
+  .disclaimer b{color:#A9BCD0}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  }
+
+  @media (max-width:520px){
+    .hero{padding-top:36px}
+    .stat-card,.card{padding:16px}
+    .cd-box{padding:12px 4px}
+    .brand-sub{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <div class="logo">N</div>
+      <div class="brand-text">
+        <span class="brand-main">NNN / GLOBAL TRACKER</span>
+        <span class="brand-sub">No Nut November 2026</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="live"><span class="dot"></span> LIVE SIMULATION</div>
+      <button id="soundBtn" class="sound-btn" type="button" aria-pressed="false">♫ SOUND: OFF</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">SIMULATED DATA · ENTERTAINMENT ONLY</div>
+    <h1>NO NUT NOVEMBER</h1>
+    <p class="hero-sub">A fictional real-time dashboard tracking the November challenge.</p>
+    <p class="hero-note">All statistics below are simulated — not real participants.</p>
+    <div class="day-pill">CHALLENGE DAY: <strong id="challengeDay">00 / 30</strong></div>
+  </section>
+
+  <!-- MAIN STATS -->
+  <section class="stats">
+    <article class="stat-card green">
+      <div class="stat-head">
+        <span class="stat-title">SURVIVORS</span>
+        <span class="stat-tag">STILL IN THE CHALLENGE</span>
+      </div>
+      <div class="stat-value" id="survivors">3,260,000,000</div>
+      <div class="stat-foot"><b class="g" id="survPct">100.00%</b> of the original pool</div>
+    </article>
+
+    <article class="stat-card red">
+      <div class="stat-head">
+        <span class="stat-title">ELIMINATED</span>
+        <span class="stat-tag">CHALLENGE ENDED</span>
+      </div>
+      <div class="stat-value" id="eliminated">0</div>
+      <div class="stat-foot"><b class="r" id="elimPct">0.00%</b> of the original pool</div>
+    </article>
+  </section>
+
+  <!-- SURVIVAL RATE -->
+  <section class="section">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">GLOBAL SURVIVAL RATE</div>
+        <div class="rate-big" id="rateBig">100.00%</div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="rateBar"></div></div>
+      <div class="bar-legend">
+        <span class="lg g"><i></i>SURVIVORS <b id="lgSurv">100.00%</b></span>
+        <span class="lg r"><i></i>ELIMINATED <b id="lgElim">0.00%</b></span>
+        <span class="lg"><b id="lgTotal">3,260,000,000</b> TOTAL POOL</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHART -->
+  <section class="section">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title blue">DROPOUT CURVE — 30 DAYS</div>
+        <div class="chart-legend">
+          <span class="lg r"><i></i>ELIMINATED (CUMULATIVE)</span>
+          <span class="lg g"><i></i>SURVIVORS</span>
+        </div>
+      </div>
+      <canvas id="chart" class="chart-canvas" aria-label="Dropout curve chart"></canvas>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <section class="section">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">NOVEMBER COUNTDOWN</div>
+      </div>
+      <div class="countdown">
+        <div class="cd-box"><span id="cdD">--</span><small>DAYS</small></div>
+        <div class="cd-box"><span id="cdH">--</span><small>HOURS</small></div>
+        <div class="cd-box"><span id="cdM">--</span><small>MINUTES</small></div>
+        <div class="cd-box"><span id="cdS">--</span><small>SECONDS</small></div>
+      </div>
+      <p class="cd-note" id="cdNote">Counting down to 01 DEC 2026 · 00:00 GMT+7</p>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="section">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">GLOBAL OVERVIEW</div>
+      </div>
+      <div class="overview">
+        <div class="map-wrap">
+          <svg class="map" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Stylized digital world map">
+            <defs>
+              <linearGradient id="mapFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#59E0AD" stop-opacity="0.16"/>
+                <stop offset="100%" stop-color="#59E0AD" stop-opacity="0.035"/>
+              </linearGradient>
+            </defs>
+
+            <g class="gridlines">
+              <line x1="0" y1="125" x2="1000" y2="125"/>
+              <line x1="0" y1="250" x2="1000" y2="250"/>
+              <line x1="0" y1="375" x2="1000" y2="375"/>
+              <line x1="200" y1="0" x2="200" y2="500"/>
+              <line x1="400" y1="0" x2="400" y2="500"/>
+              <line x1="600" y1="0" x2="600" y2="500"/>
+              <line x1="800" y1="0" x2="800" y2="500"/>
+            </g>
+
+            <g class="continents">
+              <path d="M40,72 L112,54 L172,48 L240,50 L302,62 L350,100 L320,130 L300,152 L276,186 L236,180 L210,200 L180,170 L154,140 L150,116 L120,90 L46,84 Z"/>
+              <path d="M300,40 L342,34 L366,50 L356,76 L324,86 L300,70 Z"/>
+              <path d="M280,220 L310,214 L360,250 L404,270 L394,314 L366,336 L340,360 L318,378 L306,404 L292,388 L300,360 L306,306 L282,262 L274,248 Z"/>
+              <path d="M470,150 L488,126 L502,110 L528,96 L562,92 L588,76 L586,58 L552,62 L526,80 L514,100 L526,126 L556,140 L584,138 L590,152 L540,152 L510,148 Z"/>
+              <path d="M456,206 L476,182 L530,160 L590,164 L620,214 L646,214 L620,254 L614,292 L598,320 L570,344 L550,344 L534,300 L526,252 L500,236 L478,236 L456,216 Z"/>
+              <path d="M590,62 L660,46 L730,44 L800,60 L842,86 L836,110 L810,124 L800,150 L776,166 L760,190 L736,206 L720,186 L706,160 L680,156 L656,148 L630,136 L612,116 L600,92 L588,78 Z"/>
+              <path d="M790,300 L832,290 L862,302 L870,326 L854,350 L820,356 L796,340 L786,318 Z"/>
+              <path d="M628,300 L638,296 L641,318 L630,332 L621,318 Z"/>
+            </g>
+
+            <g class="markers">
+              <circle class="ring"    cx="760" cy="150" r="9"/>
+              <circle class="pulse"   cx="760" cy="150" r="3.2"/>
+              <circle class="ring r3" cx="540" cy="112" r="9"/>
+              <circle class="pulse"   cx="540" cy="112" r="3.2"/>
+              <circle class="ring r2" cx="250" cy="140" r="9"/>
+              <circle class="pulse"   cx="250" cy="140" r="3.2"/>
+              <circle class="ring r4" cx="540" cy="256" r="9"/>
+              <circle class="pulse"   cx="540" cy="256" r="3.2"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="regions" id="regions"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY TABLE -->
+  <section class="section">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">DAILY HISTORY — 30 DAYS</div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>DAY</th>
+              <th>DAILY DROPOUTS</th>
+              <th>TOTAL DROPOUTS</th>
+              <th>REMAINING</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGINE -->
+  <section class="section engine">
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">SIMULATION ENGINE</div>
+      </div>
+      <div class="engine-grid">
+        <div class="engine-item">
+          <span class="k">ENGINE</span>
+          <span class="v">NNN-GlobalSim v2.6</span>
+        </div>
+        <div class="engine-item">
+          <span class="k">STATUS</span>
+          <span class="v ok" id="engineStatus">RUNNING</span>
+        </div>
+        <div class="engine-item">
+          <span class="k">CURRENT TIME (GMT+7)</span>
+          <span class="v mono" id="engineClock">—</span>
+        </div>
+        <div class="engine-item">
+          <span class="k">DATA SOURCE</span>
+          <span class="v">Deterministic schedule</span>
+        </div>
+      </div>
+
+      <div class="warn">SIMULATED DATA — NOT REAL STATISTICS.</div>
+      <p class="disclaimer">
+        This website is a <b>fictional entertainment project</b>. Every number shown is generated by a
+        local deterministic algorithm based on your device clock. It does <b>not</b> track real people,
+        does <b>not</b> connect to any server, and does <b>not</b> collect any personal information.
+        Nothing is stored in your browser.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     CONSTANTS
+     ========================================================= */
+  var TOTAL      = 3260000000;
+  var DAY_MS     = 86400000;
+  var VN_OFFSET  = 7 * 3600000;                       // GMT+7
+  var START      = Date.UTC(2026, 10, 1) - VN_OFFSET; // 2026-11-01 00:00 GMT+7
+  var END        = Date.UTC(2026, 11, 1) - VN_OFFSET; // 2026-12-01 00:00 GMT+7
+  var NEXT_NNN   = Date.UTC(2027, 10, 1) - VN_OFFSET; // 2027-11-01 00:00 GMT+7
+
+  /* =========================================================
+     DROPOUT SCHEDULE (30 raw weights — heavy early, light late)
+     ========================================================= */
+  var RAW = [
+    140, 105,  88,  76,  68,  60,
+     54,  49,  45,  41,  38,  35,
+     33,  31,  29,  27,  25,  23,
+     22,  21,  20,  19,  18,  17,
+     16,  15,  14,  13,  12,  11
+  ];
+
+  var RAW_SUM = RAW.reduce(function (a, b) { return a + b; }, 0);
+
+  var DAILY = RAW.map(function (w) {
+    return Math.round((w / RAW_SUM) * TOTAL);
+  });
+
+  // Fix rounding drift so the schedule sums to exactly TOTAL.
+  (function fixDrift() {
+    var s = DAILY.reduce(function (a, b) { return a + b; }, 0);
+    DAILY[0] += (TOTAL - s);
+  })();
+
+  // Cumulative dropouts after each completed day.
+  var CUM = (function () {
+    var out = [], acc = 0;
+    for (var i = 0; i < 30; i++) { acc += DAILY[i]; out.push(acc); }
+    return out;
+  })();
+
+  /* =========================================================
+     TIME HELPERS
+     ========================================================= */
+  function smoothstep(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    return t * t * (3 - 2 * t);
+  }
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString("en-US");
+  }
+
+  function pad2(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  function vnParts(ms) {
+    var d = new Date(ms + VN_OFFSET);
+    return {
+      y: d.getUTCFullYear(),
+      mo: d.getUTCMonth() + 1,
+      d: d.getUTCDate(),
+      h: d.getUTCHours(),
+      mi: d.getUTCMinutes(),
+      s: d.getUTCSeconds()
+    };
+  }
+
+  /* =========================================================
+     SIMULATION STATE
+     ========================================================= */
+  function getState(now) {
+    var phase, dayIndex, dayProgress, dropouts, elapsedDays;
+
+    if (now < START) {
+      phase = "pre";
+      dayIndex = 0;
+      dayProgress = 0;
+      dropouts = 0;
+      elapsedDays = 0;
+    } else if (now >= END) {
+      phase = "post";
+      dayIndex = 29;
+      dayProgress = 1;
+      dropouts = TOTAL;
+      elapsedDays = 30;
+    } else {
+      phase = "live";
+      var elapsed = now - START;
+      dayIndex = Math.floor(elapsed / DAY_MS);
+      if (dayIndex > 29) dayIndex = 29;
+      if (dayIndex < 0) dayIndex = 0;
+      dayProgress = (elapsed - dayIndex * DAY_MS) / DAY_MS;
+      if (dayProgress < 0) dayProgress = 0;
+      if (dayProgress > 1) dayProgress = 1;
+
+      var base = dayIndex === 0 ? 0 : CUM[dayIndex - 1];
+      dropouts = base + DAILY[dayIndex] * smoothstep(dayProgress);
+      elapsedDays = dayIndex + dayProgress;
+    }
+
+    dropouts = Math.max(0, Math.min(TOTAL, Math.round(dropouts)));
+
+    return {
+      phase: phase,
+      dayIndex: dayIndex,
+      dayProgress: dayProgress,
+      dropouts: dropouts,
+      survivors: TOTAL - dropouts,
+      elapsedDays: elapsedDays
+    };
+  }
+
+  /* =========================================================
+     DOM REFERENCES
+     ========================================================= */
+  var el = {
+    challengeDay: document.getElementById("challengeDay"),
+    survivors:    document.getElementById("survivors"),
+    eliminated:   document.getElementById("eliminated"),
+    survPct:      document.getElementById("survPct"),
+    elimPct:      document.getElementById("elimPct"),
+    rateBig:      document.getElementById("rateBig"),
+    rateBar:      document.getElementById("rateBar"),
+    lgSurv:       document.getElementById("lgSurv"),
+    lgElim:       document.getElementById("lgElim"),
+    lgTotal:      document.getElementById("lgTotal"),
+    cdD:          document.getElementById("cdD"),
+    cdH:          document.getElementById("cdH"),
+    cdM:          document.getElementById("cdM"),
+    cdS:          document.getElementById("cdS"),
+    cdNote:       document.getElementById("cdNote"),
+    engineClock:  document.getElementById("engineClock"),
+    engineStatus: document.getElementById("engineStatus"),
+    histBody:     document.getElementById("histBody"),
+    regions:      document.getElementById("regions"),
+    soundBtn:     document.getElementById("soundBtn"),
+    canvas:       document.getElementById("chart")
+  };
+
+  el.lgTotal.textContent = fmt(TOTAL);
+
+  /* =========================================================
+     REGIONS
+     ========================================================= */
+  var REGIONS = [
+    { name: "Asia-Pacific",        share: 0.42, color: "#59E0AD" },
+    { name: "Europe",              share: 0.18, color: "#6FA8FF" },
+    { name: "Americas",            share: 0.22, color: "#C08CFF" },
+    { name: "Africa & Middle East",share: 0.18, color: "#FFC978" }
+  ];
+
+  var regionEls = [];
+
+  (function buildRegions() {
+    for (var i = 0; i < REGIONS.length; i++) {
+      var r = REGIONS[i];
+      var node = document.createElement("div");
+      node.className = "region";
+
+      var top = document.createElement("div");
+      top.className = "region-top";
+
+      var nameEl = document.createElement("span");
+      nameEl.className = "region-name";
+      var sw = document.createElement("i");
+      sw.className = "swatch";
+      sw.style.background = r.color;
+      sw.style.boxShadow = "0 0 8px " + r.color;
+      nameEl.appendChild(sw);
+      nameEl.appendChild(document.createTextNode(r.name));
+
+      var valEl = document.createElement("span");
+      valEl.className = "region-val";
+      valEl.textContent = "—";
+
+      top.appendChild(nameEl);
+      top.appendChild(valEl);
+
+      var bar = document.createElement("div");
+      bar.className = "region-bar";
+      var fill = document.createElement("div");
+      fill.className = "region-fill";
+      fill.style.background = "linear-gradient(90deg," + r.color + "55," + r.color + ")";
+      fill.style.boxShadow = "0 0 12px " + r.color + "66";
+      bar.appendChild(fill);
+
+      var sub = document.createElement("div");
+      sub.className = "region-sub";
+      sub.textContent = "—";
+
+      node.appendChild(top);
+      node.appendChild(bar);
+      node.appendChild(sub);
+      el.regions.appendChild(node);
+
+      regionEls.push({ val: valEl, fill: fill, sub: sub });
+    }
+  })();
+
+  /* =========================================================
+     HISTORY TABLE
+     ========================================================= */
+  var rows = [];
+
+  (function buildTable() {
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < 30; i++) {
+      var tr = document.createElement("tr");
+      tr.className = "future";
+
+      var tdDay = document.createElement("td");
+      tdDay.textContent = pad2(i + 1) + " NOV";
+
+      var tdDaily = document.createElement("td");
+      tdDaily.textContent = "—";
+      var tdTotal = document.createElement("td");
+      tdTotal.textContent = "—";
+      var tdRem = document.createElement("td");
+      tdRem.textContent = "—";
+
+      tr.appendChild(tdDay);
+      tr.appendChild(tdDaily);
+      tr.appendChild(tdTotal);
+      tr.appendChild(tdRem);
+      frag.appendChild(tr);
+
+      rows.push({ tr: tr, daily: tdDaily, total: tdTotal, rem: tdRem });
+    }
+    el.histBody.appendChild(frag);
+  })();
+
+  var renderedDay = -999;
+
+  function renderTable(st) {
+    var cur = st.phase === "live" ? st.dayIndex : (st.phase === "post" ? 30 : -1);
+
+    if (cur !== renderedDay) {
+      renderedDay = cur;
+      for (var i = 0; i < 30; i++) {
+        var r = rows[i];
+        r.tr.classList.toggle("current", i === cur);
+        r.tr.classList.toggle("future", i > cur);
+
+        if (i < cur) {
+          r.daily.textContent = fmt(DAILY[i]);
+          r.total.textContent = fmt(CUM[i]);
+          r.rem.textContent = fmt(TOTAL - CUM[i]);
+        } else if (i > cur) {
+          r.daily.textContent = "—";
+          r.total.textContent = "—";
+          r.rem.textContent = "—";
+        }
+      }
+    }
+
+    if (cur >= 0 && cur < 30) {
+      var base = cur === 0 ? 0 : CUM[cur - 1];
+      var row = rows[cur];
+      row.daily.textContent = fmt(st.dropouts - base);
+      row.total.textContent = fmt(st.dropouts);
+      row.rem.textContent = fmt(st.survivors);
+    }
+  }
+
+  /* =========================================================
+     CHART
+     ========================================================= */
+  var canvas = el.canvas;
+  var ctx = canvas.getContext("2d");
+
+  function sizeCanvas() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
+    if (!w || !h) return;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function smoothPath(c, pts) {
+    if (pts.length < 2) return;
+    c.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i];
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
+      var p3 = pts[i + 2] || p2;
+      var cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+      var cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      var cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+      var cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      c.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
+    }
+  }
+
+  function drawChart(st) {
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
+    if (!w || !h) return;
+
+    var padL = 46, padR = 14, padT = 16, padB = 28;
+    var plotW = w - padL - padR;
+    var plotH = h - padT - padB;
+    if (plotW <= 0 || plotH <= 0) return;
+
+    ctx.clearRect(0, 0, w, h);
+
+    function xOf(dayFrac) { return padL + (dayFrac / 30) * plotW; }
+    function yOf(pct)     { return padT + (1 - pct / 100) * plotH; }
+
+    /* --- grid --- */
+    ctx.lineWidth = 1;
+    ctx.font = "10px ui-monospace, Menlo, Consolas, monospace";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    var gridVals = [0, 20, 40, 60, 80, 100];
+    for (var g = 0; g < gridVals.length; g++) {
+      var p = gridVals[g];
+      var y = yOf(p);
+      ctx.beginPath();
+      ctx.strokeStyle = p === 0 ? "rgba(122,164,205,0.22)" : "rgba(122,164,205,0.085)";
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + plotW, y);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(123,143,168,0.85)";
+      ctx.fillText(p + "%", padL - 8, y);
+    }
+
+    /* --- x labels --- */
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    var xDays = [1, 5, 10, 15, 20, 25, 30];
+    for (var d = 0; d < xDays.length; d++) {
+      var dd = xDays[d];
+      var x = xOf(dd);
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(122,164,205,0.07)";
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(123,143,168,0.8)";
+      ctx.fillText(pad2(dd), x, padT + plotH + 8);
+    }
+
+    /* --- build point series --- */
+    var redPts = [], greenPts = [];
+    redPts.push([xOf(0), yOf(0)]);
+    greenPts.push([xOf(0), yOf(100)]);
+
+    var completed = st.phase === "post" ? 30 : (st.phase === "pre" ? 0 : st.dayIndex);
+
+    for (var i = 0; i < completed; i++) {
+      var pct = (CUM[i] / TOTAL) * 100;
+      var xp = xOf(i + 1);
+      redPts.push([xp, yOf(pct)]);
+      greenPts.push([xp, yOf(100 - pct)]);
+    }
+
+    if (st.phase === "live") {
+      var pctLive = (st.dropouts / TOTAL) * 100;
+      var xLive = xOf(st.elapsedDays);
+      redPts.push([xLive, yOf(pctLive)]);
+      greenPts.push([xLive, yOf(100 - pctLive)]);
+    }
+
+    /* --- draw series --- */
+    function drawSeries(pts, color, glow) {
+      if (pts.length < 2) {
+        if (pts.length === 1) {
+          ctx.beginPath();
+          ctx.fillStyle = color;
+          ctx.arc(pts[0][0], pts[0][1], 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        return;
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      smoothPath(ctx, pts);
+      ctx.lineWidth = 2.2;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.strokeStyle = color;
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 14;
+      ctx.stroke();
+      ctx.restore();
+
+      // head marker
+      var last = pts[pts.length - 1];
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 12;
+      ctx.arc(last[0], last[1], 3.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    drawSeries(redPts, "#FF8796", "rgba(255,135,150,0.65)");
+    drawSeries(greenPts, "#59E0AD", "rgba(89,224,173,0.65)");
+  }
+
+  /* =========================================================
+     SOUND (Web Audio API)
+     ========================================================= */
+  var audioCtx = null;
+  var soundOn = false;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audioCtx = new AC(); } catch (e) { return null; }
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume().catch(function () {});
+    }
+    return audioCtx;
+  }
+
+  function beep() {
+    var ac = ensureAudio();
+    if (!ac) return;
+    var t = ac.currentTime;
+    var osc = ac.createOscillator();
+    var gain = ac.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, t);
+
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.035, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.095);
+
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.12);
+  }
+
+  el.soundBtn.addEventListener("click", function () {
+    soundOn = !soundOn;
+    if (soundOn) {
+      ensureAudio();
+      el.soundBtn.classList.add("on");
+      el.soundBtn.textContent = "♫ SOUND: ON";
+      el.soundBtn.setAttribute("aria-pressed", "true");
+      beep();
+    } else {
+      el.soundBtn.classList.remove("on");
+      el.soundBtn.textContent = "♫ SOUND: OFF";
+      el.soundBtn.setAttribute("aria-pressed", "false");
+    }
+  });
+
+  /* =========================================================
+     RENDER
+     ========================================================= */
+  function renderCountdown(now) {
+    var ended = now >= END;
+    var target = ended ? NEXT_NNN : END;
+    var diff = Math.max(0, target - now);
+
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+
+    el.cdD.textContent = pad2(d);
+    el.cdH.textContent = pad2(h);
+    el.cdM.textContent = pad2(m);
+    el.cdS.textContent = pad2(s);
+
+    if (ended) {
+      el.cdNote.textContent = "CHALLENGE COMPLETE · counting down to NNN 2027";
+      el.cdNote.classList.add("done");
+    } else {
+      el.cdNote.textContent = "Counting down to 01 DEC 2026 · 00:00 GMT+7";
+      el.cdNote.classList.remove("done");
+    }
+  }
+
+  function renderClock(now) {
+    var p = vnParts(now);
+    el.engineClock.textContent =
+      p.y + "-" + pad2(p.mo) + "-" + pad2(p.d) + " " +
+      pad2(p.h) + ":" + pad2(p.mi) + ":" + pad2(p.s) + " GMT+7";
+  }
+
+  function render(st, now) {
+
+    /* --- challenge day --- */
+    var dayLabel;
+    if (st.phase === "pre") {
+      dayLabel = "00 / 30";
+    } else if (st.phase === "post") {
+      dayLabel = "30 / 30";
+    } else {
+      dayLabel = pad2(st.dayIndex + 1) + " / 30";
+    }
+    el.challengeDay.textContent = dayLabel;
+
+    /* --- counters --- */
+    el.survivors.textContent  = fmt(st.survivors);
+    el.eliminated.textContent = fmt(st.dropouts);
+
+    var survPct = (st.survivors / TOTAL) * 100;
+    var elimPct = (st.dropouts / TOTAL) * 100;
+
+    var survStr = survPct.toFixed(2) + "%";
+    var elimStr = elimPct.toFixed(2) + "%";
+
+    el.survPct.textContent = survStr;
+    el.elimPct.textContent = elimStr;
+    el.rateBig.textContent = survStr;
+    el.lgSurv.textContent  = survStr;
+    el.lgElim.textContent  = elimStr;
+
+    /* --- progress bar --- */
+    el.rateBar.style.width = Math.max(0, Math.min(100, survPct)) + "%";
+
+    /* --- regions --- */
+    var acc = 0;
+    for (var i = 0; i < REGIONS.length; i++) {
+      var r = REGIONS[i];
+      var count;
+      if (i === REGIONS.length - 1) {
+        count = st.survivors - acc;
+      } else {
+        count = Math.round(st.survivors * r.share);
+        acc += count;
+      }
+      if (count < 0) count = 0;
+
+      var elimCount = Math.round(st.dropouts * r.share);
+
+      var re = regionEls[i];
+      re.val.textContent = fmt(count);
+      re.fill.style.width = (r.share * 100).toFixed(1) + "%";
+      re.sub.textContent = (r.share * 100).toFixed(1) + "% of survivors · " + fmt(elimCount) + " eliminated";
+    }
+
+    /* --- table --- */
+    renderTable(st);
+
+    /* --- chart --- */
+    drawChart(st);
+
+    /* --- countdown + clock --- */
+    renderCountdown(now);
+    renderClock(now);
+
+    /* --- engine status --- */
+    el.engineStatus.textContent = st.phase === "post" ? "COMPLETE" : "RUNNING";
+  }
+
+  /* =========================================================
+     MAIN LOOP
+     ========================================================= */
+  var lastSecond = -1;
+
+  function tick() {
+    var now = Date.now();
+    var st = getState(now);
+
+    render(st, now);
+
+    var sec = Math.floor(now / 1000);
+    if (sec !== lastSecond) {
+      lastSecond = sec;
+      if (soundOn) beep();
+    }
+
+    setTimeout(tick, 250);
+  }
+
+  /* =========================================================
+     RESIZE
+     ========================================================= */
+  var resizeTimer = null;
+  function onResize() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      sizeCanvas();
+      drawChart(getState(Date.now()));
+    }, 90);
+  }
+
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", onResize);
+
+  /* =========================================================
+     BOOT
+     ========================================================= */
+  sizeCanvas();
+  tick();
+
+})();
+</script>
+</body>
+</html>
